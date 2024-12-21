@@ -1,0 +1,142 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+header {
+    background-color: #333;
+    padding: 1rem;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 2rem;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+}
+
+main {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    margin-bottom: 60px; /* Add space for footer */
+}
+
+.content {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.event-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1.5rem;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.event-details {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.event-details p {
+    margin: 0;
+}
+
+h1 {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+h2 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 1rem;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+.scroll-container {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #e0b8b8; /* Lighter red border */
+    border-radius: 5px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.scroll-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #cd6a6a; /* Base red */
+    border: 1px solid #bb5959;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white; /* Better contrast for text */
+}
+
+.scroll-item:hover {
+    background-color: #d87777; /* Slightly lighter red on hover */
+    border-color: #ce6b6b;
+    transform: translateY(-1px); /* Subtle lift effect */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.scroll-item abbr {
+    font-style: italic;
+    color: #fff; /* White text for better contrast */
+    opacity: 0.9;
+}
+
+.scroll-item input {
+    display: none;
+}
+
+.scroll-item input:checked + label {
+    background-color: #b85555; /* Darker red for selected state */
+    border-color: #a94848;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Add scrollbar styling for better appearance */
+.scroll-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+    background: #f9e5e5;
+    border-radius: 4px;
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+    background: #cd6a6a;
+    border-radius: 4px;
+}
+
+.scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #b85555;
+}

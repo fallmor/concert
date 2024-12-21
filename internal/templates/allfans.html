@@ -1,0 +1,46 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Show Bookings</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/shows">Home</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1>List of all Fans</h1>
+        <div class="content">
+            {{range .Fans}}
+            <div class="event-card">
+                <a href="/fan/{{.Nom}}">
+                    <h2 id="smallbox">{{.Nom}}</h2>
+                </a>
+                <div class="event-details">
+                    <p><strong>Artist:</strong> {{.Show.Artist.Nom}}</p>
+                    <p><strong>Genre:</strong> {{.Show.Artist.Genre}}</p>
+                    <p><strong>Date:</strong> {{.Show.Date.Format "January 2, 2006"}}</p>
+                    <p><strong>Time:</strong> {{.Show.Date.Format "15:04"}}</p>
+                    <p><strong>Location:</strong> {{.Show.Place}}</p>
+                    <p><strong>Price:</strong> {{.Price}}€</p>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 My Website</p>
+    </footer>
+</body>
+</html>
