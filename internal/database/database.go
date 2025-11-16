@@ -19,42 +19,49 @@ func DbSetup() (*gorm.DB, error) {
 	DbUser := os.Getenv("DB_User")
 	DbPass := os.Getenv("DB_Password")
 	DbPort := os.Getenv("DB_PORT")
+	DbSSLMode := os.Getenv("DB_SSLMode")
+	if DbSSLMode == "" {
+		if DbHost == "localhost" || DbHost == "127.0.0.1" {
+			DbSSLMode = "disable"
+		} else {
+			DbSSLMode = "require"
+		}
+	}
 
-	connectionString := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", DbHost, DbPort, DbUser, DbName, DbPass)
-	fmt.Println("Connecting to DB with:", connectionString)
+	connectionString := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s", DbHost, DbPort, DbUser, DbName, DbPass, DbSSLMode)
+	log.Printf("Connecting to database at %s:%s", DbHost, DbPort)
+	
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN: connectionString,
-	}),
-	// &gorm.Config{
-	// 	Logger: logger.Default.LogMode(logger.Info),
-	// }
-	)
-
-	dbping, _ := db.DB()
+	}))
 	if err != nil {
-		fmt.Println("can't connect to the DB")
+		log.Printf("Failed to connect to database: %v", err)
 		return nil, err
 	}
-	if err := dbping.Ping(); err != nil {
-		fmt.Println("Can't ping the DB")
+
+	dbPing, err := db.DB()
+	if err != nil {
+		log.Printf("Failed to get database connection: %v", err)
+		return nil, err
+	}
+	
+	if err := dbPing.Ping(); err != nil {
+		log.Printf("Failed to ping database: %v", err)
 		return nil, err
 	}
 	return db, nil
 }
 
 func Migrate(db *gorm.DB) error {
-
-	if err := db.AutoMigrate(&concert.Artist{}); err != nil {
-		return err
+	if err := db.AutoMigrate(&concert.Artist{}, &concert.Show{}, &concert.Fan{}); err != nil {
+		return fmt.Errorf("failed to migrate database: %w", err)
 	}
-	if err := db.AutoMigrate(&concert.Show{}); err != nil {
-		return err
-	}
-	return db.AutoMigrate(&concert.Fan{})
+	
+	log.Println("Database migration completed - Artist table includes photo_url and album_url columns")
+	return nil
 }
 
 func loadEnvFromProjectRoot() {
-
 	currentDir, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Error getting current directory: %v", err)
@@ -70,7 +77,6 @@ func loadEnvFromProjectRoot() {
 
 		parentDir := filepath.Dir(currentDir)
 		if parentDir == currentDir {
-			// Reached root without finding .env
 			log.Println("Could not find .env file")
 			break
 		}

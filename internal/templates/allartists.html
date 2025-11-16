@@ -1,0 +1,43 @@
+{{define "title"}}All Artists - Show Bookings{{end}}
+
+{{define "content"}}
+    <h1>All Artists</h1>
+    <div class="content">
+        {{if .Artists}}
+            {{range .Artists}}
+            <div class="event-card">
+                {{if .PhotoURL}}
+                <div class="image-container">
+                    <img src="{{.PhotoURL}}" alt="{{.Nom}}" class="artist-photo" loading="lazy">
+                </div>
+                {{else}}
+                <div class="image-placeholder">🎤</div>
+                {{end}}
+                
+                <h2>{{.Nom}}</h2>
+                
+                <div class="event-details">
+                    <p><strong>Genre:</strong> {{.Genre}}</p>
+                    <p><strong>Shows:</strong> <a href="/show/{{.Nom}}">View Shows</a></p>
+                </div>
+
+                {{if .AlbumURL}}
+                <div class="album-section" style="margin-top: 1rem;">
+                    <p><strong>Album Cover:</strong></p>
+                    <div class="image-container">
+                        <img src="{{.AlbumURL}}" alt="Album Cover" class="album-cover" loading="lazy">
+                    </div>
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+        {{else}}
+            <div class="empty-state">
+                <p>No artists registered yet. <a href="/artist/new">Add the first artist!</a></p>
+            </div>
+        {{end}}
+    </div>
+{{end}}
+
+{{template "base.html" .}}
+

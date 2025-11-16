@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{block "title" .}}Show Bookings{{end}}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/animations.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/shows">Home</a></li>
+                <li><a href="/artists">All Artists</a></li>
+                <li><a href="/shows/new">Add Show</a></li>
+                <li><a href="/artist/new">Add Artist</a></li>
+                <li><a href="/fans/new">Add Fan</a></li>
+                <li><a href="/list">All Fans</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {{block "content" .}}{{end}}
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Concert Booking System</p>
+    </footer>
+    <script>
+        (function() {
+            if (!CSS.supports('selector(:has(*))')) {
+                document.querySelectorAll('.scroll-item input[type="radio"]').forEach(function(radio) {
+                    radio.addEventListener('change', function() {
+                        document.querySelectorAll('.scroll-item').forEach(function(item) {
+                            item.classList.remove('checked');
+                        });
+                        if (this.checked) {
+                            this.closest('.scroll-item').classList.add('checked');
+                        }
+                    });
+                    if (radio.checked) {
+                        radio.closest('.scroll-item').classList.add('checked');
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
+

@@ -11,9 +11,11 @@ type Service struct {
 }
 
 type Artist struct {
-	ID    uint `gorm:"primaryKey;autoIncrement"`
-	Nom   string
-	Genre string
+	ID        uint   `gorm:"primaryKey;autoIncrement"`
+	Nom       string
+	Genre     string
+	PhotoURL  string `gorm:"type:varchar(500)"`
+	AlbumURL  string `gorm:"type:varchar(500)"`
 }
 
 type Show struct {
@@ -62,31 +64,27 @@ func (s Service) GetFan(name string) ([]Fan, error) {
 	return fan, nil
 }
 
-func (s Service) GetShow(artistname string) ([]Show, error) {
-	var show []Show
+func (s Service) GetShow(artistName string) ([]Show, error) {
+	var shows []Show
 	if result := s.Db.
-		//Select("shows").
 		Preload("Artist").
 		Joins("INNER JOIN artists ON shows.artist_id = artists.id").
-		Where("nom = ?", artistname).
-		Find(&show); result.Error != nil {
-		return []Show{}, result.Error
+		Where("nom = ?", artistName).
+		Find(&shows); result.Error != nil {
+		return nil, result.Error
 	}
-
-	return show, nil
+	return shows, nil
 }
 func (s Service) GetShowByID(id uint) (Show, error) {
 	var show Show
 	if result := s.Db.
 		Preload("Artist").
 		Preload("Fans", func(db *gorm.DB) *gorm.DB {
-			return db.Order("fans.created_at DESC") // Optionally order the fans
+			return db.Order("fans.created_at DESC")
 		}).
-		//Where("id = ?", id).
 		First(&show, id); result.Error != nil {
 		return show, result.Error
 	}
-
 	return show, nil
 }
 
@@ -100,6 +98,11 @@ func (s Service) SetArtist(artist Artist) (Artist, error) {
 	if result := s.Db.Save(&artist); result.Error != nil {
 		return Artist{}, result.Error
 	}
+	
+	if result := s.Db.First(&artist, artist.ID); result.Error != nil {
+		return Artist{}, result.Error
+	}
+	
 	return artist, nil
 }
 
@@ -112,21 +115,25 @@ func (s Service) ParticipateShow(info Fan) (Show, error) {
 }
 
 func (s Service) ListAllShow() ([]Show, error) {
-
-	var show []Show
-
-	if result := s.Db.Preload("Artist").Find(&show); result.Error != nil {
+	var shows []Show
+	if result := s.Db.Preload("Artist").Find(&shows); result.Error != nil {
 		return nil, result.Error
 	}
-	return show, nil
+	return shows, nil
 }
 
 func (s Service) ListAllFan() ([]Fan, error) {
-
-	var fan []Fan
-
-	if result := s.Db.Preload("Show").Preload("Show.Artist").Find(&fan); result.Error != nil {
+	var fans []Fan
+	if result := s.Db.Preload("Show").Preload("Show.Artist").Find(&fans); result.Error != nil {
 		return nil, result.Error
 	}
-	return fan, nil
+	return fans, nil
+}
+
+func (s Service) ListAllArtists() ([]Artist, error) {
+	var artists []Artist
+	if result := s.Db.Find(&artists); result.Error != nil {
+		return nil, result.Error
+	}
+	return artists, nil
 }

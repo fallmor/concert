@@ -1,30 +1,13 @@
+{{define "title"}}All Fans - Show Bookings{{end}}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Show Bookings</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="/shows">Home</a></li>
-                <li><a href="/about">About</a></li>
-                <li><a href="/contact">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <main>
-        <h1>List of all Fans</h1>
-        <div class="content">
+{{define "content"}}
+<h1>List of all Fans</h1>
+<div class="content">
+        {{if .Fans}}
             {{range .Fans}}
             <div class="event-card">
                 <a href="/fan/{{.Nom}}">
-                    <h2 id="smallbox">{{.Nom}}</h2>
+                    <h2>{{.Nom}}</h2>
                 </a>
                 <div class="event-details">
                     <p><strong>Artist:</strong> {{.Show.Artist.Nom}}</p>
@@ -36,11 +19,12 @@
                 </div>
             </div>
             {{end}}
+        {{else}}
+        <div class="empty-state">
+            <p>No fans registered yet. <a href="/fans/new">Add the first fan!</a></p>
+            </div>
+        {{end}}
         </div>
-    </main>
+        {{end}}
 
-    <footer>
-        <p>&copy; 2024 My Website</p>
-    </footer>
-</body>
-</html>
+{{template "base.html" .}}

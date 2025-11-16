@@ -1,0 +1,45 @@
+{{define "title"}}Add New Artist - Show Bookings{{end}}
+
+{{define "content"}}
+    <h1>Add a New Artist</h1>
+    <form action="/artist" method="POST" class="fan-form" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="nom">Artist Name:</label>
+            <input type="text" id="nom" name="nom" required aria-required="true" placeholder="e.g., The Beatles">
+        </div>
+        
+        <div class="form-group">
+            <label for="genre">Genre:</label>
+            <input type="text" id="genre" name="genre" required aria-required="true" placeholder="e.g., Rock, Pop, Jazz">
+        </div>
+
+        <div class="form-group">
+            <label for="photo_url">Artist Photo URL (optional):</label>
+            <input type="url" id="photo_url" name="photo_url" placeholder="https://example.com/artist-photo.jpg">
+            <small style="color: #666; font-size: 0.9rem;">Or upload an image below</small>
+        </div>
+
+        <div class="form-group">
+            <label for="photo_file">Upload Artist Photo (optional):</label>
+            <input type="file" id="photo_file" name="photo_file" accept="image/*">
+        </div>
+
+        <div class="form-group">
+            <label for="album_url">Album Cover URL (optional):</label>
+            <input type="url" id="album_url" name="album_url" placeholder="https://example.com/album-cover.jpg">
+            <small style="color: #666; font-size: 0.9rem;">Or upload an image below</small>
+        </div>
+
+        <div class="form-group">
+            <label for="album_file">Upload Album Cover (optional):</label>
+            <input type="file" id="album_file" name="album_file" accept="image/*">
+        </div>
+
+        <div class="form-group">
+            <button type="submit">Add Artist</button>
+        </div>
+    </form>
+{{end}}
+
+{{template "base.html" .}}
+

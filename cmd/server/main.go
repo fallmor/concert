@@ -10,31 +10,32 @@ import (
 )
 
 func Run() error {
-	log.Println("starting the server")
+	log.Println("Starting the server")
 
 	db, err := database.DbSetup()
 	if err != nil {
-		log.Println("Could not setup the Db")
-		return err
+		return fmt.Errorf("failed to setup database: %w", err)
 	}
-	if err := database.Migrate(db); err != nil {
-		log.Fatal("Could not migrate the database")
-	}
-	myconcert := concert.NewConcert(db)
-	handler := httptransport.NewRouter(myconcert)
-	handler.ChiSetRoutes()
-	fmt.Println("connected to the database")
 
+	if err := database.Migrate(db); err != nil {
+		return fmt.Errorf("failed to migrate database: %w", err)
+	}
+
+	log.Println("Database connected and migrated successfully")
+
+	concertService := concert.NewConcert(db)
+	handler := httptransport.NewRouter(concertService)
+	handler.ChiSetRoutes()
+
+	log.Println("Server starting on :8080")
 	if err := http.ListenAndServe(":8080", handler.Route); err != nil {
-		fmt.Println("Failed to set up server")
-		return err
+		return fmt.Errorf("failed to start server: %w", err)
 	}
 	return nil
-
 }
 
 func main() {
 	if err := Run(); err != nil {
-		fmt.Println("Can't start the server")
+		log.Fatalf("Can't start the server: %v", err)
 	}
 }

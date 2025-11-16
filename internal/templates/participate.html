@@ -1,48 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add New Fan</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
-    <header>
-        <h1>Add a New Fan</h1>
-    </header>
+{{define "title"}}Add New Fan - Show Bookings{{end}}
 
-    <main>
-        <form action="/submit" method="POST" onsubmit="window.location.href='/shows'; return true;">
-            <div>
-                <label for="nom">Fan Name:</label>
-                <input type="text" id="nom" name="nom" required>
+{{define "content"}}
+<h1>Add a New Fan</h1>
+    <form action="/submit" method="POST" class="fan-form">
+        <div class="form-group">
+            <label for="nom">Fan Name:</label>
+            <input type="text" id="nom" name="nom" required aria-required="true" autocomplete="name">
             </div>
-            
-            <div>
-                <label>Select Show:</label>
-                <section class="scroll-container">
+        <div class="form-group">
+            <label for="show-selection">Select Show:</label>
+            {{if .Shows}}
+            <section class="scroll-container" id="show-selection" role="radiogroup" aria-label="Select a show">
                     {{ range .Shows }}
                     <label for="show-{{ .ID }}" class="scroll-item">
-                        <abbr>{{ .Date }}  {{ .Artist.Nom }}</abbr>
-                        <input id="show-{{ .ID }}" type="radio" name="show_id" value="{{ .ID }}" required>
+                        <input id="show-{{ .ID }}" type="radio" name="show_id" value="{{ .ID }}" required aria-required="true">
+                        <span class="show-info">
+                            <strong>{{ .Artist.Nom }}</strong>
+                            <span class="show-date">{{ .Date.Format "January 2, 2006 at 15:04" }}</span>
+                            <span class="show-location">{{ .Place }}</span>
+                        </span>
                     </label>
                     {{ end }}
                 </section>
+            {{else}}
+            <div class="empty-state">
+                <p>No shows available. Please add a show first.</p>
+            </div>
+            {{end}}
+        </div>
+
+        <div class="form-group">
+            <label for="price">Price (€):</label>
+            <input type="number" id="price" name="price" min="0" step="0.01" required aria-required="true" inputmode="decimal">
             </div>
 
-            <div>
-                <label for="price">Price (€):</label>
-                <input type="number" id="price" name="price" min="0" required>
-            </div>
-
-            <div>
-                <button type="submit">Add Fan </button>
-            </div>
+        <div class="form-group">
+            <button type="submit">Add Fan</button>
+        </div>
         </form>
-    </main>
+{{end}}
 
-    <footer>
-        <p>&copy; 2024 My Website</p>
-    </footer>
-</body>
-</html>
+{{template "base.html" .}}
