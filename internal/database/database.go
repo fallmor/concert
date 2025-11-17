@@ -53,7 +53,8 @@ func DbSetup() (*gorm.DB, error) {
 }
 
 func Migrate(db *gorm.DB) error {
-	if err := db.AutoMigrate(&concert.Artist{}, &concert.Show{}, &concert.Fan{}); err != nil {
+
+	if err := db.AutoMigrate(&concert.Artist{}, &concert.User{}, &concert.Show{}, &concert.Fan{}); err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)
 	}
 	

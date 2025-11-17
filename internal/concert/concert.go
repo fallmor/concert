@@ -33,15 +33,8 @@ type Fan struct {
 	ShowID uint `gorm:"not null"`
 	Show   Show `gorm:"foreignKey:ShowID;references:ID"`
 	Price  int
-}
-
-type FanService interface {
-	GetFan(string) (Fan, error)
-	GetShow(string) (Show, error)
-	SetShow(Show) (Show, error)
-	SetArtist(Artist) (Artist, error)
-	ParticipateShow(Fan) (Show, error)
-	ListAllShow() ([]Show, error)
+	UserID uint
+	//User   User `gorm:"foreignKey:UserID;references:ID"`
 }
 
 func NewConcert(db *gorm.DB) *Service {

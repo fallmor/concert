@@ -51,7 +51,7 @@ func getStaticDir() string {
 
 type Handler struct {
 	Route   chi.Router
-	Service *concert.Service
+	Service concert.ConcertService
 }
 
 type PageData struct {
@@ -71,7 +71,7 @@ type ArtistInfo struct {
 	Artists []concert.Artist
 }
 
-func NewRouter(service *concert.Service) *Handler {
+func NewRouter(service concert.ConcertService) *Handler {
 	return &Handler{
 		Service: service,
 	}
@@ -94,7 +94,103 @@ func (h *Handler) ChiSetRoutes() {
 	h.Route.Post("/show", h.SetShow)
 	h.Route.Post("/artist", h.SetArtist)
 	h.Route.Post("/upload/image", h.UploadImage)
+	h.Route.Get("/login", h.GetLogin)
+	h.Route.Post("/login", h.Login)
+	h.Route.Get("/register", h.GetRegister)
+	h.Route.Post("/register", h.Register)
+	h.Route.Post("/logout", h.Logout)
+	h.Route.Get("/", h.Home)
 }
+
+func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	tmpl := template.Must(template.ParseFiles(
+		getTemplatePath("base.html"),
+		getTemplatePath("register.html"),
+	))
+	if err := tmpl.Execute(w, nil); err != nil {
+		log.Printf("Error rendering register template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	tmpl := template.Must(template.ParseFiles(
+		getTemplatePath("base.html"),
+		getTemplatePath("login.html"),
+	))
+	if err := tmpl.Execute(w, nil); err != nil {
+		log.Printf("Error rendering login template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	tmpl := template.Must(template.ParseFiles(
+		getTemplatePath("base.html"),
+		getTemplatePath("logout.html"),
+	))
+	if err := tmpl.Execute(w, nil); err != nil {
+		log.Printf("Error rendering logout template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) GetLogin(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	tmpl := template.Must(template.ParseFiles(
+		getTemplatePath("base.html"),
+		getTemplatePath("login.html"),
+	))
+	if err := tmpl.Execute(w, nil); err != nil {
+		log.Printf("Error executing login template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) GetRegister(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	tmpl := template.Must(template.ParseFiles(
+		getTemplatePath("base.html"),
+		getTemplatePath("register.html"),
+	))
+	if err := tmpl.Execute(w, nil); err != nil {
+		log.Printf("Error executing register template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	
+	shows, err := h.Service.ListAllShow()
+	if err != nil {
+		log.Printf("Error listing shows for home page: %v", err)
+		shows = []concert.Show{}
+	}
+	
+	data := ShowInfo{
+		Shows: shows,
+	}
+	
+	tmpl := template.Must(template.ParseFiles(
+		getTemplatePath("base.html"),
+		getTemplatePath("home.html"),
+	))
+	if err := tmpl.Execute(w, data); err != nil {
+		log.Printf("Error executing home template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
 
 func (h *Handler) GetFan(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
