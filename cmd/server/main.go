@@ -24,7 +24,7 @@ func Run() error {
 	log.Println("Database connected and migrated successfully")
 
 	concertService := concert.NewConcert(db)
-	handler := httptransport.NewRouter(concertService)
+	handler := httptransport.NewRouter(concertService, db)
 	handler.ChiSetRoutes()
 
 	log.Println("Server starting on :8080")

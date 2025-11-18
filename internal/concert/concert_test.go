@@ -14,7 +14,6 @@ func SetupTestDB() *gorm.DB {
 	if err != nil {
 		panic("failed to connect database")
 	}
-	// Auto-migrate the schema
 	db.AutoMigrate(&Artist{}, &Show{}, &Fan{})
 	return db
 }
@@ -22,13 +21,11 @@ func TestGetFan(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
 	
-	// Create required Artist and Show first
 	artist := Artist{Nom: "Drake", Genre: "Rock"}
 	db.Create(&artist)
 	show := Show{ArtistID: artist.ID, Place: "Paris", Date: time.Now()}
 	db.Create(&show)
 	
-	// Now create the Fan
 	fan := Fan{Nom: "Abdou", ShowID: show.ID, Price: 100}
 	db.Create(&fan)
 	

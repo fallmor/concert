@@ -2,6 +2,7 @@ package httptransport
 
 import (
 	"concert/internal/concert"
+	"concert/internal/utils"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,180 +17,53 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"gorm.io/gorm"
 )
 
-func getProjectRoot() string {
-	wd, err := os.Getwd()
-	if err != nil {
-		wd = "."
-	}
-	
-	currentDir := wd
-	for {
-		goModPath := filepath.Join(currentDir, "go.mod")
-		if _, err := os.Stat(goModPath); err == nil {
-			return currentDir
-		}
-		
-		parentDir := filepath.Dir(currentDir)
-		if parentDir == currentDir {
-			return wd
-		}
-		currentDir = parentDir
-	}
-}
 
-func getTemplatePath(filename string) string {
-	projectRoot := getProjectRoot()
-	return filepath.Join(projectRoot, "internal", "templates", filename)
-}
 
-func getStaticDir() string {
-	projectRoot := getProjectRoot()
-	return filepath.Join(projectRoot, "static")
-}
 
-type Handler struct {
-	Route   chi.Router
-	Service concert.ConcertService
-}
-
-type PageData struct {
-	Title string
-	Fans  []concert.Fan
-}
-
-type ShowInfo struct {
-	Shows []concert.Show
-}
-
-type FanInfo struct {
-	Fans []concert.Fan
-}
-
-type ArtistInfo struct {
-	Artists []concert.Artist
-}
-
-func NewRouter(service concert.ConcertService) *Handler {
+func NewRouter(service concert.ConcertService, db *gorm.DB) *Handler {
 	return &Handler{
 		Service: service,
+		Db:      db,
 	}
 }
 
 func (h *Handler) ChiSetRoutes() {
 	h.Route = chi.NewRouter()
-	staticDir := getStaticDir()
-	fileServer := http.FileServer(http.Dir(staticDir))
-	h.Route.Handle("/static/*", http.StripPrefix("/static/", fileServer))
-	h.Route.Get("/fan/{name}", h.GetFan)
-	h.Route.Get("/show/{artistname}", h.GetShow)
-	h.Route.Get("/fans/new", h.NewFan)
-	h.Route.Get("/shows", h.ListAllShow)
-	h.Route.Get("/shows/new", h.NewShow)
-	h.Route.Get("/artists", h.ListAllArtists)
-	h.Route.Get("/artist/new", h.NewArtist)
-	h.Route.Get("/list", h.ListAllFan)
-	h.Route.Post("/submit", h.ParticipateShow)
-	h.Route.Post("/show", h.SetShow)
-	h.Route.Post("/artist", h.SetArtist)
-	h.Route.Post("/upload/image", h.UploadImage)
+	
+	
+	
+	// public routes no chi middleware
+	h.Route.Get("/", h.Home)
 	h.Route.Get("/login", h.GetLogin)
 	h.Route.Post("/login", h.Login)
 	h.Route.Get("/register", h.GetRegister)
 	h.Route.Post("/register", h.Register)
-	h.Route.Post("/logout", h.Logout)
-	h.Route.Get("/", h.Home)
-}
-
-func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	tmpl := template.Must(template.ParseFiles(
-		getTemplatePath("base.html"),
-		getTemplatePath("register.html"),
-	))
-	if err := tmpl.Execute(w, nil); err != nil {
-		log.Printf("Error rendering register template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-}
-
-func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	tmpl := template.Must(template.ParseFiles(
-		getTemplatePath("base.html"),
-		getTemplatePath("login.html"),
-	))
-	if err := tmpl.Execute(w, nil); err != nil {
-		log.Printf("Error rendering login template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-}
-
-func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	tmpl := template.Must(template.ParseFiles(
-		getTemplatePath("base.html"),
-		getTemplatePath("logout.html"),
-	))
-	if err := tmpl.Execute(w, nil); err != nil {
-		log.Printf("Error rendering logout template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-}
-
-func (h *Handler) GetLogin(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	tmpl := template.Must(template.ParseFiles(
-		getTemplatePath("base.html"),
-		getTemplatePath("login.html"),
-	))
-	if err := tmpl.Execute(w, nil); err != nil {
-		log.Printf("Error executing login template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-}
-
-func (h *Handler) GetRegister(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	tmpl := template.Must(template.ParseFiles(
-		getTemplatePath("base.html"),
-		getTemplatePath("register.html"),
-	))
-	if err := tmpl.Execute(w, nil); err != nil {
-		log.Printf("Error executing register template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-}
-
-func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 	
-	shows, err := h.Service.ListAllShow()
-	if err != nil {
-		log.Printf("Error listing shows for home page: %v", err)
-		shows = []concert.Show{}
-	}
-	
-	data := ShowInfo{
-		Shows: shows,
-	}
-	
-	tmpl := template.Must(template.ParseFiles(
-		getTemplatePath("base.html"),
-		getTemplatePath("home.html"),
-	))
-	if err := tmpl.Execute(w, data); err != nil {
-		log.Printf("Error executing home template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
+
+	h.Route.Group(func(r chi.Router) {
+		r.Use(NeedsAuth(h.Db))
+
+		r.Get("/fan/{name}", h.GetFan)
+		r.Get("/show/{artistname}", h.GetShow)
+		r.Get("/fans/new", h.NewFan)
+		r.Get("/shows", h.ListAllShow)
+		r.Get("/shows/new", h.NewShow)
+		r.Get("/artists", h.ListAllArtists)
+		r.Get("/artist/new", h.NewArtist)
+		r.Get("/list", h.ListAllFan)
+		r.Post("/submit", h.ParticipateShow)
+		r.Post("/show", h.SetShow)
+		r.Post("/artist", h.SetArtist)
+		r.Post("/upload/image", h.UploadImage)
+		r.Post("/logout", h.Logout)
+		
+	})
 }
+
+
 
 
 func (h *Handler) GetFan(w http.ResponseWriter, r *http.Request) {
@@ -204,8 +78,8 @@ func (h *Handler) GetFan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl := template.Must(template.ParseFiles(
-		getTemplatePath("base.html"),
-		getTemplatePath("fan.html"),
+		utils.GetTemplatePath("base.html"),
+		utils.GetTemplatePath("fan.html"),
 	))
 
 	data := PageData{
@@ -236,8 +110,8 @@ func (h *Handler) GetShow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl := template.Must(template.ParseFiles(
-		getTemplatePath("base.html"),
-		getTemplatePath("show_by_artist.html"),
+		utils.GetTemplatePath("base.html"),
+		utils.GetTemplatePath("show_by_artist.html"),
 	))
 
 	if err := tmpl.Execute(w, data); err != nil {
@@ -262,8 +136,8 @@ func (h *Handler) ListAllShow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl := template.Must(template.ParseFiles(
-		getTemplatePath("base.html"),
-		getTemplatePath("allshows.html"),
+		utils.GetTemplatePath("base.html"),
+		utils.GetTemplatePath("allshows.html"),
 	))
 
 	if err := tmpl.Execute(w, data); err != nil {
@@ -288,8 +162,8 @@ func (h *Handler) ListAllFan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl := template.Must(template.ParseFiles(
-		getTemplatePath("base.html"),
-		getTemplatePath("allfans.html"),
+		utils.GetTemplatePath("base.html"),
+		utils.GetTemplatePath("allfans.html"),
 	))
 
 	if err := tmpl.Execute(w, data); err != nil {
@@ -314,8 +188,8 @@ func (h *Handler) ListAllArtists(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl := template.Must(template.ParseFiles(
-		getTemplatePath("base.html"),
-		getTemplatePath("allartists.html"),
+		utils.GetTemplatePath("base.html"),
+		utils.GetTemplatePath("allartists.html"),
 	))
 	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Error executing artists template: %v", err)
@@ -339,8 +213,8 @@ func (h *Handler) NewShow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl := template.Must(template.ParseFiles(
-		getTemplatePath("base.html"),
-		getTemplatePath("newshow.html"),
+		utils.GetTemplatePath("base.html"),
+		utils.GetTemplatePath("newshow.html"),
 	))
 	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Error rendering show form: %v", err)
@@ -422,8 +296,8 @@ func (h *Handler) NewArtist(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
 	tmpl := template.Must(template.ParseFiles(
-		getTemplatePath("base.html"),
-		getTemplatePath("newartist.html"),
+		utils.GetTemplatePath("base.html"),
+		utils.GetTemplatePath("newartist.html"),
 	))
 	if err := tmpl.Execute(w, nil); err != nil {
 		log.Printf("Error rendering artist form: %v", err)
@@ -570,8 +444,8 @@ func (h *Handler) NewFan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl := template.Must(template.ParseFiles(
-		getTemplatePath("base.html"),
-		getTemplatePath("participate.html"),
+		utils.GetTemplatePath("base.html"),
+		utils.GetTemplatePath("participate.html"),
 	))
 	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Error rendering fan form: %v", err)
@@ -583,13 +457,14 @@ func (h *Handler) NewFan(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) saveUploadedFile(file multipart.File, handler *multipart.FileHeader, folder string) (string, error) {
 	defer file.Close()
 
-	projectRoot := getProjectRoot()
+	projectRoot := utils.GetProjectRoot()
 	uploadDir := filepath.Join(projectRoot, "static", "images", folder)
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create upload directory: %w", err)
 	}
 
 	ext := filepath.Ext(handler.Filename)
+	// for security reasons we need to sanitize the filename
 	baseName := strings.TrimSuffix(handler.Filename, ext)
 	baseName = strings.ReplaceAll(baseName, " ", "_")
 	baseName = strings.ReplaceAll(baseName, "/", "_")
