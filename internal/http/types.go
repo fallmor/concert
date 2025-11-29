@@ -1,4 +1,4 @@
-package httptransport
+package http
 
 import (
 	"concert/internal/concert"
@@ -28,4 +28,8 @@ type FanInfo struct {
 
 type ArtistInfo struct {
 	Artists []concert.Artist
+}
+
+type UserInfo struct {
+	Users []concert.User
 }

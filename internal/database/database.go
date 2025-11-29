@@ -2,6 +2,7 @@ package database
 
 import (
 	"concert/internal/concert"
+	"concert/internal/utils"
 	"fmt"
 	"log"
 	"os"
@@ -13,7 +14,13 @@ import (
 )
 
 func DbSetup() (*gorm.DB, error) {
-	loadEnvFromProjectRoot()
+	projectRoot := utils.GetProjectRoot("go.mod")
+	envPath := filepath.Join(projectRoot, ".env")
+	err := godotenv.Load(envPath)
+	if err != nil {
+		log.Printf("Error loading .env file: %v", err)
+		return nil, err
+	}
 	DbName := os.Getenv("DB_Name")
 	DbHost := os.Getenv("DB_Host")
 	DbUser := os.Getenv("DB_User")
@@ -30,7 +37,7 @@ func DbSetup() (*gorm.DB, error) {
 
 	connectionString := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s", DbHost, DbPort, DbUser, DbName, DbPass, DbSSLMode)
 	log.Printf("Connecting to database at %s:%s", DbHost, DbPort)
-	
+
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN: connectionString,
 	}))
@@ -44,7 +51,7 @@ func DbSetup() (*gorm.DB, error) {
 		log.Printf("Failed to get database connection: %v", err)
 		return nil, err
 	}
-	
+
 	if err := dbPing.Ping(); err != nil {
 		log.Printf("Failed to ping database: %v", err)
 		return nil, err
@@ -57,30 +64,7 @@ func Migrate(db *gorm.DB) error {
 	if err := db.AutoMigrate(&concert.Artist{}, &concert.User{}, &concert.Show{}, &concert.Fan{}); err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)
 	}
-	
+
 	log.Println("Database migration completed - Artist table includes photo_url and album_url columns")
 	return nil
-}
-
-func loadEnvFromProjectRoot() {
-	currentDir, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("Error getting current directory: %v", err)
-	}
-
-	for {
-		envPath := filepath.Join(currentDir, ".env")
-		err = godotenv.Load(envPath)
-		if err == nil {
-			fmt.Printf("Loaded .env from %s\n", envPath)
-			return
-		}
-
-		parentDir := filepath.Dir(currentDir)
-		if parentDir == currentDir {
-			log.Println("Could not find .env file")
-			break
-		}
-		currentDir = parentDir
-	}
 }

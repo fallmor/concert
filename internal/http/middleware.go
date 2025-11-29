@@ -1,4 +1,4 @@
-package httptransport
+package http
 
 import (
 	"concert/internal/concert"
@@ -13,15 +13,15 @@ import (
 
 func SetCookie(w http.ResponseWriter, userID uint) {
 	http.SetCookie(w, &http.Cookie{
-		Name:  "session_concert",
-		Value: fmt.Sprintf("user_%d", userID),
-		Path:  "/",
+		Name:     "session_concert",
+		Value:    fmt.Sprintf("user_%d", userID),
+		Path:     "/",
 		HttpOnly: true,
-		MaxAge: 3600, 
+		MaxAge:   3600,
 	})
 }
 
-//used when logout
+// used when logout
 func DeleteCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
 		Name:   "session_concert",
@@ -58,7 +58,6 @@ func GetCurrentUserID(r *http.Request) (uint, error) {
 	return uint(userID), nil
 }
 
-
 func GetUserFromCookie(db *gorm.DB, r *http.Request) (*concert.User, error) {
 	userID, err := GetCurrentUserID(r)
 	if err != nil {
@@ -84,7 +83,6 @@ func NeedsAuth(db *gorm.DB) func(http.Handler) http.Handler {
 		})
 	}
 }
-
 
 func NeedsRole(db *gorm.DB, role string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -129,7 +127,6 @@ func UserExists(db *gorm.DB, email, username string) (bool, error) {
 	return false, err
 }
 
-
 func FindUserByEmailOrUsername(db *gorm.DB, emailOrUsername string) (*concert.User, error) {
 	var user concert.User
 	err := db.Where("email = ? OR username = ?", emailOrUsername, emailOrUsername).First(&user).Error
@@ -138,7 +135,6 @@ func FindUserByEmailOrUsername(db *gorm.DB, emailOrUsername string) (*concert.Us
 	}
 	return &user, nil
 }
-
 
 func InsertUser(db *gorm.DB, email, username, password, firstName, lastName, role string) (*concert.User, error) {
 	hashedPassword, err := HashPassword(password)

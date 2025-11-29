@@ -1,6 +1,5 @@
 package concert
 
-
 type ConcertService interface {
 	GetFan(name string) ([]Fan, error)
 	GetShow(artistName string) ([]Show, error)
@@ -11,4 +10,11 @@ type ConcertService interface {
 	ListAllShow() ([]Show, error)
 	ListAllFan() ([]Fan, error)
 	ListAllArtists() ([]Artist, error)
+	GetAllUsers() ([]User, error)
+	DeleteShow(id uint) error
+	DeleteArtist(id uint) error
+	DeleteFan(id uint) error
+	UpdateShow(show Show) (Show, error)
+	UpdateArtist(artist Artist) (Artist, error)
+	UpdateFan(fan Fan) (Fan, error)
 }

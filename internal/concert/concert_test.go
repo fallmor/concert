@@ -20,15 +20,15 @@ func SetupTestDB() *gorm.DB {
 func TestGetFan(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
-	
+
 	artist := Artist{Nom: "Drake", Genre: "Rock"}
 	db.Create(&artist)
 	show := Show{ArtistID: artist.ID, Place: "Paris", Date: time.Now()}
 	db.Create(&show)
-	
+
 	fan := Fan{Nom: "Abdou", ShowID: show.ID, Price: 100}
 	db.Create(&fan)
-	
+
 	found, err := service.GetFan("Abdou")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, found)
@@ -45,7 +45,7 @@ func TestGetShow(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, found)
 	assert.Equal(t, show.Place, found[0].Place)
-}	
+}
 func TestGetShowByID(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
@@ -57,7 +57,7 @@ func TestGetShowByID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, found)
 	assert.Equal(t, show.Place, found.Place)
-}	
+}
 func TestSetShow(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
@@ -69,7 +69,7 @@ func TestSetShow(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, found)
 	assert.Equal(t, show.Place, found.Place)
-}		
+}
 func TestSetArtist(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
@@ -79,7 +79,7 @@ func TestSetArtist(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, found)
 	assert.Equal(t, artist.Nom, found.Nom)
-}	
+}
 func TestParticipateShow(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)

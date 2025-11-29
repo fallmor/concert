@@ -1,36 +1,505 @@
-{{define "title"}}All Shows - Show Bookings{{end}}
+{{define "title"}}All Shows - Concert Booking System{{end}}
 
 {{define "content"}}
-<h1>List of all Shows</h1>
-<div class="content">
+<div class="shows-page">
+    <div class="page-header">
+        <h1>Upcoming Shows</h1>
+        <p class="page-subtitle">Discover amazing concerts and book your tickets</p>
+    </div>
+
+    <!-- Vue.js Show Filter Component -->
+    <div id="show-filter-app">
+        <div class="filter-container">
+            <div class="filter-inputs">
+                <input type="text" v-model="searchQuery" placeholder="Search by artist, genre, or location..."
+                    class="filter-input">
+                <select v-model="selectedGenre" class="filter-select">
+                    <option value="">All Genres</option>
+                    <option v-for="genre in uniqueGenres" :key="genre" :value="genre" v-text="genre"></option>
+                </select>
+            </div>
+            <div class="filter-stats">
+                <span v-if="filteredShows.length !== allShows.length">
+                    Showing <span v-text="filteredShows.length"></span> of <span v-text="allShows.length"></span> shows
+                </span>
+                <span v-else>
+                    <span v-text="allShows.length"></span> shows available
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="shows-grid" id="shows-container">
         {{if .Shows}}
             {{range .Shows}}
-            <div class="event-card">
+            <div class="show-card" data-artist="{{.Artist.Nom}}" data-genre="{{.Artist.Genre}}" data-location="{{.Place}}"
+                data-date="{{.Date.Format " 2006-01-02"}}">
                 {{if .Artist.PhotoURL}}
-                <div class="image-container">
-                    <img src="{{.Artist.PhotoURL}}" alt="{{.Artist.Nom}}" class="artist-photo" loading="lazy">
+                <div class="show-image">
+                    <img src="{{.Artist.PhotoURL}}" alt="{{.Artist.Nom}}" loading="lazy">
                 </div>
                 {{else}}
-                <div class="image-placeholder">🎵</div>
+                <div class="show-image-placeholder">
+                    <span class="placeholder-icon">🎵</span>
+                </div>
                 {{end}}
-                <a href="/show/{{.Artist.Nom}}">
-                    <h2>{{.Artist.Nom}}</h2>
-                </a>
-                <div class="event-details">
-                    <p><strong>Artist:</strong> {{.Artist.Nom}}</p>
-                    <p><strong>Genre:</strong> {{.Artist.Genre}}</p>
-                    <p><strong>Date:</strong> {{.Date.Format "January 2, 2006"}}</p>
-                    <p><strong>Time:</strong> {{.Date.Format "15:04"}}</p>
-                    <p><strong>Location:</strong> {{.Place}}</p>
+                <div class="show-content">
+                    <div class="show-header">
+                        <h2><a href="/show/{{.Artist.Nom}}">{{.Artist.Nom}}</a></h2>
+                        <span class="genre-badge">{{.Artist.Genre}}</span>
+                    </div>
+                
+                    <div class="show-details">
+                        <div class="detail-item">
+                            <span class="detail-icon">📅</span>
+                            <div>
+                                <strong>Date:</strong> {{.Date.Format "January 2, 2006"}}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">🕐</span>
+                            <div>
+                                <strong>Time:</strong> {{.Date.Format "15:04"}}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">📍</span>
+                            <div>
+                                <strong>Location:</strong> {{.Place}}
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="show-actions">
+                        <a href="/show/{{.Artist.Nom}}" class="btn btn-primary">View Details</a>
+                        {{if and $.User (or (eq $.User.Role "moderator") (eq $.User.Role "admin"))}}
+                        <a href="/shows/{{.ID}}/edit" class="btn btn-secondary">Edit</a>
+                        {{end}}
+                        {{if and $.User (eq $.User.Role "admin")}}
+                        <button data-show-id="{{.ID}}" class="btn btn-danger delete-show-btn">Delete</button>
+                        {{end}}
+                    </div>
                 </div>
             </div>
             {{end}}
         {{else}}
         <div class="empty-state">
-            <p>No shows available yet.</p>
+            <div class="empty-icon">🎭</div>
+            <h3>No Shows Available</h3>
+            <p>Check back later for upcoming concerts!</p>
             </div>
         {{end}}
-        </div>
-        {{end}}
+    </div>
+</div>
 
-{{template "base.html" .}}
+<script>
+    // Vue.js Show Filter Component
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                searchQuery: '',
+                selectedGenre: '',
+                allShows: []
+            }
+        },
+        mounted() {
+            // Extract show data from DOM
+            const showCards = document.querySelectorAll('.show-card');
+            this.allShows = Array.from(showCards).map(card => ({
+                element: card,
+                artist: card.dataset.artist || '',
+                genre: card.dataset.genre || '',
+                location: card.dataset.location || '',
+                date: card.dataset.date || ''
+            }));
+        },
+        computed: {
+            uniqueGenres() {
+                const genres = this.allShows.map(show => show.genre).filter(Boolean);
+                return [...new Set(genres)].sort();
+            },
+            filteredShows() {
+                let filtered = this.allShows;
+
+                // Filter by search query
+                if (this.searchQuery) {
+                    const query = this.searchQuery.toLowerCase();
+                    filtered = filtered.filter(show =>
+                        show.artist.toLowerCase().includes(query) ||
+                        show.genre.toLowerCase().includes(query) ||
+                        show.location.toLowerCase().includes(query)
+                    );
+                }
+
+                // Filter by genre
+                if (this.selectedGenre) {
+                    filtered = filtered.filter(show => show.genre === this.selectedGenre);
+                }
+
+                return filtered;
+            }
+        },
+        watch: {
+            filteredShows(newShows) {
+                // Show/hide cards based on filter
+                this.allShows.forEach(show => {
+                    const isVisible = newShows.includes(show);
+                    show.element.style.display = isVisible ? '' : 'none';
+                });
+            }
+        }
+    }).mount('#show-filter-app');
+
+    // Use event delegation for delete buttons
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.delete-show-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const showID = this.getAttribute('data-show-id');
+                deleteShow(showID);
+            });
+        });
+    });
+
+    function deleteShow(showID) {
+        if (!confirm('Are you sure you want to delete this show? This action cannot be undone.')) {
+            return;
+        }
+
+        fetch(`/shows/${showID}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Failed to delete show');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to delete show');
+            });
+    }
+
+    function deleteArtist(artistID) {
+        if (!confirm('Are you sure you want to delete this artist? This action cannot be undone.')) {
+            return;
+        }
+
+        fetch(`/artists/${artistID}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Failed to delete artist');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to delete artist');
+            });
+    }
+</script>
+
+<style>
+    .shows-page {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #333;
+        margin: 0 0 0.5rem 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .page-subtitle {
+        font-size: 1.1rem;
+        color: #666;
+        margin: 0;
+    }
+
+    /* Filter Container Styles */
+    .filter-container {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .filter-inputs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-input {
+        flex: 1;
+        min-width: 250px;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+
+    .filter-input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .filter-select {
+        padding: 0.75rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        background: white;
+        cursor: pointer;
+        transition: border-color 0.2s;
+        min-width: 150px;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .filter-stats {
+        color: #666;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
+    .shows-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 2rem;
+    }
+
+    .show-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .show-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .show-image {
+        width: 100%;
+        height: 200px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .show-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .show-card:hover .show-image img {
+        transform: scale(1.1);
+    }
+
+    .show-image-placeholder {
+        width: 100%;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .placeholder-icon {
+        font-size: 4rem;
+        opacity: 0.7;
+    }
+
+    .show-content {
+        padding: 1.5rem;
+    }
+
+    .show-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .show-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        flex: 1;
+    }
+
+    .show-header h2 a {
+        color: #333;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .show-header h2 a:hover {
+        color: #667eea;
+    }
+
+    .genre-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .show-details {
+        margin: 1rem 0;
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+        color: #555;
+    }
+
+    .detail-icon {
+        font-size: 1.2rem;
+        width: 24px;
+        text-align: center;
+    }
+
+    .show-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+        display: inline-block;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+    }
+
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h3 {
+        color: #333;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .empty-state p {
+        color: #666;
+        margin: 0;
+    }
+
+    @media (max-width: 768px) {
+        .shows-page {
+            padding: 1rem;
+        }
+
+        .shows-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-inputs {
+            flex-direction: column;
+        }
+
+        .filter-input,
+        .filter-select {
+            width: 100%;
+        }
+
+        .show-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
+{{end}}

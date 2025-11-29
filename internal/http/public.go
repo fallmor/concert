@@ -1,4 +1,4 @@
-package httptransport
+package http
 
 import (
 	"concert/internal/concert"
@@ -10,15 +10,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-
-
-
 func (h *Handler) PublicRoutes(r chi.Router) {
 
 	staticDir := utils.GetStaticDir()
 	fileServer := http.FileServer(http.Dir(staticDir))
 	h.Route.Handle("/static/*", http.StripPrefix("/static/", fileServer))
-
 
 	r.Get("/", h.Home)
 	r.Get("/login", h.GetLogin)
@@ -29,17 +25,21 @@ func (h *Handler) PublicRoutes(r chi.Router) {
 
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	
+
 	shows, err := h.Service.ListAllShow()
 	if err != nil {
 		log.Printf("Error listing shows for home page: %v", err)
 		shows = []concert.Show{}
 	}
-	
-	data := ShowInfo{
-		Shows: shows,
+
+	data := struct {
+		ShowInfo
+		User *concert.User
+	}{
+		ShowInfo: ShowInfo{Shows: shows},
+		User:     h.getCurrentUser(r),
 	}
-	
+
 	tmpl := template.Must(template.ParseFiles(
 		utils.GetTemplatePath("base.html"),
 		utils.GetTemplatePath("home.html"),
@@ -50,7 +50,6 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
 
 func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -136,7 +135,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 	// Clear session cookie
 	DeleteCookie(w)
-	
+
 	// Redirect to home page
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

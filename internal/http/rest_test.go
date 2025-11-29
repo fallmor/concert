@@ -1,4 +1,4 @@
-package httptransport
+package http
 
 import (
 	"concert/internal/concert"
@@ -12,9 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-
 func TestHandler_GetFan(t *testing.T) {
-
 	mockService := mocks.MockConcertService{
 		GetFanFunc: func(name string) ([]concert.Fan, error) {
 			return []concert.Fan{
@@ -34,7 +32,6 @@ func TestHandler_GetFan(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code)
 }
 
-
 func TestHandler_ListAllShow(t *testing.T) {
 	mockService := mocks.MockConcertService{
 		ListAllShowFunc: func() ([]concert.Show, error) {
@@ -43,7 +40,7 @@ func TestHandler_ListAllShow(t *testing.T) {
 				{Place: "Marseille", Date: time.Now()},
 			}, nil
 		},
-	}	
+	}
 	handler := NewRouter(&mockService, nil)
 	handler.ChiSetRoutes()
 	request := httptest.NewRequest("GET", "/shows", nil)
@@ -53,7 +50,6 @@ func TestHandler_ListAllShow(t *testing.T) {
 	assert.True(t, strings.Contains(response.Body.String(), "Paris"))
 	assert.True(t, strings.Contains(response.Body.String(), "Marseille"))
 	assert.Equal(t, "text/html; charset=UTF-8", response.Header().Get("Content-Type"))
-	
 }
 
 func TestHandler_ListAllFan(t *testing.T) {
@@ -76,7 +72,6 @@ func TestHandler_ListAllFan(t *testing.T) {
 	assert.True(t, strings.Contains(response.Body.String(), "khady"))
 	assert.True(t, strings.Contains(response.Body.String(), "Aminata"))
 	assert.Equal(t, "text/html; charset=UTF-8", response.Header().Get("Content-Type"))
-	
 }
 
 func TestHandler_SetArtist(t *testing.T) {

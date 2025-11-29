@@ -1,0 +1,182 @@
+{{define "title"}}Edit Artist - Concert Booking System{{end}}
+
+{{define "content"}}
+<div class="edit-page">
+    <div class="page-header">
+        <h1>Edit Artist</h1>
+        <a href="/artists" class="back-link">← Back to Artists</a>
+    </div>
+
+    <form action="/artists/{{.Artist.ID}}/update" method="POST" class="edit-form" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="nom">Artist Name:</label>
+            <input type="text" id="nom" name="nom" 
+                   value="{{.Artist.Nom}}" 
+                   required placeholder="e.g., The Beatles" 
+                   class="form-input">
+        </div>
+        
+        <div class="form-group">
+            <label for="genre">Genre:</label>
+            <input type="text" id="genre" name="genre" 
+                   value="{{.Artist.Genre}}" 
+                   required placeholder="e.g., Rock, Pop, Jazz" 
+                   class="form-input">
+        </div>
+
+        <div class="form-group">
+            <label>Current Photo:</label>
+            {{if .Artist.PhotoURL}}
+            <div class="current-image">
+                <img src="{{.Artist.PhotoURL}}" alt="Current photo" style="max-width: 200px; border-radius: 8px;">
+            </div>
+            {{else}}
+            <p style="color: #666;">No photo currently set</p>
+            {{end}}
+        </div>
+
+        <div class="form-group">
+            <label for="photo_url">Artist Photo URL (optional):</label>
+            <input type="url" id="photo_url" name="photo_url" 
+                   placeholder="https://example.com/artist-photo.jpg" 
+                   class="form-input">
+            <small style="color: #666; font-size: 0.9rem;">Or upload an image below</small>
+        </div>
+
+        <div class="form-group">
+            <label for="photo_file">Upload New Artist Photo (optional):</label>
+            <input type="file" id="photo_file" name="photo_file" accept="image/*" class="form-input">
+        </div>
+
+        <div class="form-group">
+            <label>Current Album Cover:</label>
+            {{if .Artist.AlbumURL}}
+            <div class="current-image">
+                <img src="{{.Artist.AlbumURL}}" alt="Current album cover" style="max-width: 200px; border-radius: 8px;">
+            </div>
+            {{else}}
+            <p style="color: #666;">No album cover currently set</p>
+            {{end}}
+        </div>
+
+        <div class="form-group">
+            <label for="album_url">Album Cover URL (optional):</label>
+            <input type="url" id="album_url" name="album_url" 
+                   placeholder="https://example.com/album-cover.jpg" 
+                   class="form-input">
+            <small style="color: #666; font-size: 0.9rem;">Or upload an image below</small>
+        </div>
+
+        <div class="form-group">
+            <label for="album_file">Upload New Album Cover (optional):</label>
+            <input type="file" id="album_file" name="album_file" accept="image/*" class="form-input">
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Update Artist</button>
+            <a href="/artists" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.edit-page {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    margin: 0;
+    color: #333;
+}
+
+.back-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+.edit-form {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.current-image {
+    margin-top: 0.5rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+</style>
+{{end}}

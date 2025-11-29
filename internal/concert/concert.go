@@ -11,11 +11,11 @@ type Service struct {
 }
 
 type Artist struct {
-	ID        uint   `gorm:"primaryKey;autoIncrement"`
-	Nom       string
-	Genre     string
-	PhotoURL  string `gorm:"type:varchar(500)"`
-	AlbumURL  string `gorm:"type:varchar(500)"`
+	ID       uint `gorm:"primaryKey;autoIncrement"`
+	Nom      string
+	Genre    string
+	PhotoURL string `gorm:"type:varchar(500)"`
+	AlbumURL string `gorm:"type:varchar(500)"`
 }
 
 type Show struct {
@@ -91,11 +91,11 @@ func (s Service) SetArtist(artist Artist) (Artist, error) {
 	if result := s.Db.Save(&artist); result.Error != nil {
 		return Artist{}, result.Error
 	}
-	
+
 	if result := s.Db.First(&artist, artist.ID); result.Error != nil {
 		return Artist{}, result.Error
 	}
-	
+
 	return artist, nil
 }
 
@@ -129,4 +129,78 @@ func (s Service) ListAllArtists() ([]Artist, error) {
 		return nil, result.Error
 	}
 	return artists, nil
+}
+
+func (s Service) GetUserByID(id uint) (User, error) {
+	var user User
+	if result := s.Db.First(&user, id); result.Error != nil {
+		return User{}, result.Error
+	}
+	return user, nil
+}
+
+func (s Service) GetAllUsers() ([]User, error) {
+	var users []User
+	if result := s.Db.Find(&users); result.Error != nil {
+		return nil, result.Error
+	}
+	return users, nil
+}
+
+func (s Service) GetArtistByID(id uint) (Artist, error) {
+	var artist Artist
+	if result := s.Db.First(&artist, id); result.Error != nil {
+		return Artist{}, result.Error
+	}
+	return artist, nil
+}
+
+func (s Service) GetFanByID(id uint) (Fan, error) {
+	var fan Fan
+	if result := s.Db.Preload("Show").Preload("Show.Artist").First(&fan, id); result.Error != nil {
+		return Fan{}, result.Error
+	}
+	return fan, nil
+}
+
+func (s Service) DeleteShow(id uint) error {
+	if result := s.Db.Delete(&Show{}, id); result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (s Service) DeleteArtist(id uint) error {
+	if result := s.Db.Delete(&Artist{}, id); result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (s Service) DeleteFan(id uint) error {
+	if result := s.Db.Delete(&Fan{}, id); result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (s Service) UpdateShow(show Show) (Show, error) {
+	if result := s.Db.Save(&show); result.Error != nil {
+		return Show{}, result.Error
+	}
+	return show, nil
+}
+
+func (s Service) UpdateArtist(artist Artist) (Artist, error) {
+	if result := s.Db.Save(&artist); result.Error != nil {
+		return Artist{}, result.Error
+	}
+	return artist, nil
+}
+
+func (s Service) UpdateFan(fan Fan) (Fan, error) {
+	if result := s.Db.Save(&fan); result.Error != nil {
+		return Fan{}, result.Error
+	}
+	return fan, nil
 }
