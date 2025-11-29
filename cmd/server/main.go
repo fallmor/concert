@@ -3,7 +3,7 @@ package main
 import (
 	"concert/internal/concert"
 	"concert/internal/database"
-	httptransport "concert/internal/http_transport"
+	httpTransport "concert/internal/http"
 	"fmt"
 	"log"
 	"net/http"
@@ -24,7 +24,7 @@ func Run() error {
 	log.Println("Database connected and migrated successfully")
 
 	concertService := concert.NewConcert(db)
-	handler := httptransport.NewRouter(concertService, db)
+	handler := httpTransport.NewRouter(concertService, db)
 	handler.ChiSetRoutes()
 
 	log.Println("Server starting on :8080")
