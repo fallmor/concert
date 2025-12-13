@@ -45,7 +45,7 @@ func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	
+
 	data := struct {
 		UserInfo
 		User *concert.User
@@ -53,7 +53,7 @@ func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		UserInfo: UserInfo{Users: users},
 		User:     h.getCurrentUser(r),
 	}
-	
+
 	utils.RenderTemplate(w, "admin/users.html", data)
 }
 

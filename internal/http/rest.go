@@ -29,7 +29,20 @@ func NewRouter(service concert.ConcertService, db *gorm.DB) *Handler {
 func (h *Handler) ChiSetRoutes() {
 	h.Route = chi.NewRouter()
 
-	h.PublicRoutes(h.Route)
+	staticDir := utils.GetStaticDir()
+	fileServer := http.FileServer(http.Dir(staticDir))
+	h.Route.Handle("/static/*", http.StripPrefix("/static/", fileServer))
+
+	h.Route.Group(func(r chi.Router) {
+		r.Use(RateLimit)
+		r.Get("/", h.Home)
+		r.Get("/login", h.GetLogin)
+		r.Post("/login", h.Login)
+		r.Get("/register", h.GetRegister)
+		r.Post("/register", h.Register)
+		r.Get("/forget-password", h.GetForgetPassword)
+		r.Post("/forget-password", h.ForgetPassword)
+	})
 
 	h.Route.Group(func(r chi.Router) {
 		r.Use(NeedsAuth(h.Db))
@@ -66,7 +79,6 @@ func (h *Handler) ChiSetRoutes() {
 		r.Post("/fans/{id}/update", h.UpdateFan)
 	})
 }
-
 
 func (h *Handler) saveUploadedFile(file multipart.File, handler *multipart.FileHeader, folder string) (string, error) {
 	defer file.Close()

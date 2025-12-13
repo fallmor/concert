@@ -11,7 +11,6 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-
 func (h *Handler) GetFan(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 

@@ -14,7 +14,6 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-
 func (h *Handler) ListAllFan(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
@@ -74,7 +73,6 @@ func (h *Handler) ListAllShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
 
 func (h *Handler) NewShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")

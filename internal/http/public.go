@@ -3,25 +3,14 @@ package http
 import (
 	"concert/internal/concert"
 	"concert/internal/utils"
+	"context"
 	"log"
 	"net/http"
 	"text/template"
+	"time"
 
-	"github.com/go-chi/chi/v5"
+	"go.temporal.io/sdk/client"
 )
-
-func (h *Handler) PublicRoutes(r chi.Router) {
-
-	staticDir := utils.GetStaticDir()
-	fileServer := http.FileServer(http.Dir(staticDir))
-	h.Route.Handle("/static/*", http.StripPrefix("/static/", fileServer))
-
-	r.Get("/", h.Home)
-	r.Get("/login", h.GetLogin)
-	r.Post("/login", h.Login)
-	r.Get("/register", h.GetRegister)
-	r.Post("/register", h.Register)
-}
 
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
@@ -164,4 +153,72 @@ func (h *Handler) GetRegister(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+}
+
+func (h *Handler) ForgetPassword(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Redirect(w, r, "/forget-password", http.StatusSeeOther)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Unable to parse form", http.StatusBadRequest)
+		return
+	}
+
+	email := r.FormValue("email")
+
+	if email == "" {
+		http.Error(w, "Email is required", http.StatusBadRequest)
+		return
+	}
+
+	user, err := FindUserByEmailOrUsername(h.Db, email)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	log.Printf("User found: email=%s, username=%s", user.Email, user.Username)
+
+	// Send reset password email via Temporal workflow
+	if err := h.SendResetPasswordEmail(user.Email); err != nil {
+		log.Printf("Error sending reset password email: %v", err)
+		http.Error(w, "Failed to send reset password email", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (h *Handler) GetForgetPassword(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	tmpl := template.Must(template.ParseFiles(
+		utils.GetTemplatePath("base.html"),
+		utils.GetTemplatePath("forget-password.html"),
+	))
+	if err := tmpl.Execute(w, nil); err != nil {
+		log.Printf("Error executing forget password template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+// execute a temporal workflow to send a reset password email
+func (h *Handler) SendResetPasswordEmail(email string) error {
+	ctx := context.Background()
+
+	workflowID := "email-workflow-" + time.Now().Format("20060102-150405")
+	workflowOptions := client.StartWorkflowOptions{
+		ID:        workflowID,
+		TaskQueue: "email-task-queue",
+	}
+
+	_, err := h.TemporalClient.ExecuteWorkflow(ctx, workflowOptions, "SendMailWorkflow", email)
+	if err != nil {
+		log.Printf("Error executing workflow: %v", err)
+		return err
+	}
+
+	return nil
 }

@@ -44,7 +44,6 @@ func ParseID(idStr string) (uint64, error) {
 	return strconv.ParseUint(idStr, 10, 64)
 }
 
-
 func RenderTemplate(w http.ResponseWriter, templateName string, data interface{}) {
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 	tmpl := template.Must(template.ParseFiles(
@@ -61,4 +60,10 @@ func WriteJSONSuccess(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true}`))
+}
+
+func WriteJson2manyRequest(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusTooManyRequests)
+	w.Write([]byte(`{"error": "Rate limit hit"}`))
 }

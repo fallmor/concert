@@ -9,8 +9,6 @@ import (
 	"text/template"
 )
 
-
-
 func (h *Handler) ListAllArtists(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 

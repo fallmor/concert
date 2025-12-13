@@ -2,12 +2,17 @@ package http
 
 import (
 	"concert/internal/concert"
+	"concert/internal/utils"
 	"fmt"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/time/rate"
 	"gorm.io/gorm"
 )
 
@@ -177,4 +182,57 @@ func AuthenticateUser(db *gorm.DB, emailOrUsername, password string) (*concert.U
 	}
 
 	return user, nil
+}
+
+type UserLimit struct {
+	limiter  *rate.Limiter
+	lastSeen time.Time
+}
+
+// Package-level variables for rate limiting
+var (
+	rateLimitMap = make(map[string]*UserLimit)
+	rateLimitMu  sync.Mutex
+)
+
+func RateLimit(next http.Handler) http.Handler {
+	time.Tick(3 * time.Minute)
+	// cleanup
+	go func() {
+		for {
+			rateLimitMu.Lock()
+			for ip, user := range rateLimitMap {
+
+				if time.Since(user.lastSeen) > 3*time.Minute {
+					delete(rateLimitMap, ip)
+				}
+			}
+			rateLimitMu.Unlock()
+		}
+	}()
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ip := r.RemoteAddr
+		host, _, err := net.SplitHostPort(ip)
+		if err != nil {
+			host = ip
+		}
+
+		rateLimitMu.Lock()
+
+		if _, ok := rateLimitMap[host]; !ok {
+			rateLimitMap[host] = &UserLimit{
+				limiter: rate.NewLimiter(2, 4), // 2 requests per second, burst of 4
+			}
+		}
+		rateLimitMap[host].lastSeen = time.Now()
+
+		if !rateLimitMap[host].limiter.Allow() {
+			rateLimitMu.Unlock()
+			utils.WriteJson2manyRequest(w)
+			return
+		}
+		rateLimitMu.Unlock()
+
+		next.ServeHTTP(w, r)
+	})
 }
