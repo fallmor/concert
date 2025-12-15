@@ -141,6 +141,22 @@ func FindUserByEmailOrUsername(db *gorm.DB, emailOrUsername string) (*concert.Us
 	return &user, nil
 }
 
+func UpdatePassword(db *gorm.DB, email, password string) error {
+	user, err := FindUserByEmailOrUsername(db, email)
+	if err != nil {
+		return err
+	}
+	hashedPassword, err := HashPassword(password)
+	user.PasswordHash = hashedPassword
+	if err != nil {
+		return err
+	}
+	if result := db.Save(&user); result != nil {
+		return result.Error
+	}
+	return nil
+}
+
 func InsertUser(db *gorm.DB, email, username, password, firstName, lastName, role string) (*concert.User, error) {
 	hashedPassword, err := HashPassword(password)
 	if err != nil {
@@ -189,7 +205,6 @@ type UserLimit struct {
 	lastSeen time.Time
 }
 
-// Package-level variables for rate limiting
 var (
 	rateLimitMap = make(map[string]*UserLimit)
 	rateLimitMu  sync.Mutex

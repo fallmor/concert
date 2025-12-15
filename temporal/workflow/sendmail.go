@@ -7,10 +7,15 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-func SendMailWorkflow(ctx workflow.Context, email string) error {
+type UserInfo struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+func SendMailWorkflow(ctx workflow.Context, user UserInfo) error {
 
 	logger := workflow.GetLogger(ctx)
-	logger.Info("Sending mail to %s", email)
+	logger.Info("Sending mail to %s", user.Email)
 	defer logger.Info("workflow completed")
 	ao := workflow.ActivityOptions{
 		StartToCloseTimeout: 3 * time.Minute,
@@ -22,7 +27,7 @@ func SendMailWorkflow(ctx workflow.Context, email string) error {
 		},
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)
-	err := workflow.ExecuteActivity(ctx, "SendResetPasswordEmail", email).Get(ctx, nil)
+	err := workflow.ExecuteActivity(ctx, "SendResetPasswordEmail", user.Email, user.Password).Get(ctx, nil)
 	if err != nil {
 		logger.Error("Error sending mail", "error", err)
 		return err

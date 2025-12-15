@@ -16,13 +16,26 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"go.temporal.io/sdk/client"
 	"gorm.io/gorm"
 )
 
-func NewRouter(service concert.ConcertService, db *gorm.DB) *Handler {
+func NewRouter(service concert.ConcertService, db *gorm.DB) (*Handler, error) {
+	tmpClient, err := client.Dial(
+		client.Options{HostPort: "127.0.0.1:7233"})
+	if err != nil {
+		return nil, err
+	}
 	return &Handler{
-		Service: service,
-		Db:      db,
+		Service:        service,
+		Db:             db,
+		TemporalClient: tmpClient,
+	}, nil
+}
+
+func (h *Handler) Close() {
+	if h.TemporalClient != nil {
+		h.TemporalClient.Close()
 	}
 }
 

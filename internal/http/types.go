@@ -35,3 +35,8 @@ type ArtistInfo struct {
 type UserInfo struct {
 	Users []concert.User
 }
+
+type TemporalUserInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}

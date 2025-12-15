@@ -9,6 +9,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
 )
 
@@ -165,20 +166,16 @@ func (h *Handler) ForgetPassword(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to parse form", http.StatusBadRequest)
 		return
 	}
-
 	email := r.FormValue("email")
-
 	if email == "" {
 		http.Error(w, "Email is required", http.StatusBadRequest)
 		return
 	}
-
 	user, err := FindUserByEmailOrUsername(h.Db, email)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
-
 	log.Printf("User found: email=%s, username=%s", user.Email, user.Username)
 
 	// Send reset password email via Temporal workflow
@@ -207,14 +204,24 @@ func (h *Handler) GetForgetPassword(w http.ResponseWriter, r *http.Request) {
 // execute a temporal workflow to send a reset password email
 func (h *Handler) SendResetPasswordEmail(email string) error {
 	ctx := context.Background()
+	// generate a password
+	// not secure
 
+	generatePass := uuid.NewString()[:8]
+	if err := UpdatePassword(h.Db, email, generatePass); err != nil {
+		return err
+	}
 	workflowID := "email-workflow-" + time.Now().Format("20060102-150405")
 	workflowOptions := client.StartWorkflowOptions{
 		ID:        workflowID,
 		TaskQueue: "email-task-queue",
 	}
 
-	_, err := h.TemporalClient.ExecuteWorkflow(ctx, workflowOptions, "SendMailWorkflow", email)
+	user := TemporalUserInput{
+		Email:    email,
+		Password: generatePass,
+	}
+	_, err := h.TemporalClient.ExecuteWorkflow(ctx, workflowOptions, "SendMailWorkflow", user)
 	if err != nil {
 		log.Printf("Error executing workflow: %v", err)
 		return err

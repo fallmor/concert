@@ -22,13 +22,15 @@ func NewEmailActivities(smtpHost string, smtpPort string, smtpUsername string, s
 
 }
 
-func (e *EmailActivities) SendResetPasswordEmail(email string) error {
+func (e *EmailActivities) SendResetPasswordEmail(email, password string) error {
 	auth := smtp.PlainAuth("", e.SMTPUsername, e.SMTPPassword, e.SMTPHost)
-	from := "test@example.com"
+	from := e.SMTPUsername
 	msg := []byte("To: " + email + "\r\n" +
 		"Subject: Test email\r\n" +
 		"\r\n" +
-		"This a test\r\n")
+		"You have request a new password\r\n" +
+		"New password:" + password)
+	fmt.Println(password)
 	addr := fmt.Sprintf("%s:%s", e.SMTPHost, e.SMTPPort)
 
 	err := smtp.SendMail(addr, auth, from, []string{email}, msg)

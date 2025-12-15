@@ -23,7 +23,8 @@ func TestHandler_GetFan(t *testing.T) {
 		},
 	}
 
-	handler := NewRouter(&mockService, nil)
+	handler, err := NewRouter(&mockService, nil)
+	assert.Nil(t, err)
 	handler.ChiSetRoutes()
 
 	request := httptest.NewRequest("GET", "/fan/Abdou", nil)
@@ -41,7 +42,8 @@ func TestHandler_ListAllShow(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := NewRouter(&mockService, nil)
+	handler, err := NewRouter(&mockService, nil)
+	assert.Nil(t, err)
 	handler.ChiSetRoutes()
 	request := httptest.NewRequest("GET", "/shows", nil)
 	response := httptest.NewRecorder()
@@ -62,7 +64,8 @@ func TestHandler_ListAllFan(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := NewRouter(&mockService, nil)
+	handler, err := NewRouter(&mockService, nil)
+	assert.Nil(t, err)
 	handler.ChiSetRoutes()
 	request := httptest.NewRequest("GET", "/list", nil)
 	response := httptest.NewRecorder()
@@ -80,7 +83,8 @@ func TestHandler_SetArtist(t *testing.T) {
 			return concert.Artist{Nom: "Drake", Genre: "Rock", PhotoURL: "https://example.com/photo.jpg", AlbumURL: "https://example.com/album.jpg"}, nil
 		},
 	}
-	handler := NewRouter(&mockService, nil)
+	handler, err := NewRouter(&mockService, nil)
+	assert.Nil(t, err)
 	handler.ChiSetRoutes()
 	request := httptest.NewRequest("POST", "/artist", nil)
 	response := httptest.NewRecorder()
