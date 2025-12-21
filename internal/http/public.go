@@ -156,6 +156,19 @@ func (h *Handler) GetRegister(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *Handler) NotFoundHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotFound)
+	tmpl := template.Must(template.ParseFiles(
+		utils.GetTemplatePath("base.html"),
+		utils.GetTemplatePath("error.html"),
+	))
+	err := tmpl.Execute(w, nil)
+	if err != nil {
+		http.Error(w, "404 - Page Not Found", http.StatusNotFound)
+		return
+	}
+}
+
 func (h *Handler) ForgetPassword(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Redirect(w, r, "/forget-password", http.StatusSeeOther)
@@ -174,6 +187,7 @@ func (h *Handler) ForgetPassword(w http.ResponseWriter, r *http.Request) {
 	user, err := FindUserByEmailOrUsername(h.Db, email)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
+
 		return
 	}
 	log.Printf("User found: email=%s, username=%s", user.Email, user.Username)

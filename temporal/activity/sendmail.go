@@ -1,41 +1,51 @@
 package activity
 
 import (
+	"bytes"
+	"concert/internal/utils"
 	"fmt"
-	"net/smtp"
+	"html/template"
+
+	"github.com/resend/resend-go/v2"
 )
 
 type EmailActivities struct {
-	SMTPHost     string
-	SMTPPort     string
-	SMTPUsername string
-	SMTPPassword string
+	Client resend.Client
+	Token  string
 }
 
-func NewEmailActivities(smtpHost string, smtpPort string, smtpUsername string, smtpPassword string) *EmailActivities {
+func NewEmailActivities(token string) *EmailActivities {
 	return &EmailActivities{
-		SMTPHost:     smtpHost,
-		SMTPPort:     smtpPort,
-		SMTPUsername: smtpUsername,
-		SMTPPassword: smtpPassword,
+		Client: *resend.NewClient(token),
 	}
 
 }
 
 func (e *EmailActivities) SendResetPasswordEmail(email, password string) error {
-	auth := smtp.PlainAuth("", e.SMTPUsername, e.SMTPPassword, e.SMTPHost)
-	from := e.SMTPUsername
-	msg := []byte("To: " + email + "\r\n" +
-		"Subject: Test email\r\n" +
-		"\r\n" +
-		"You have request a new password\r\n" +
-		"New password:" + password)
-	fmt.Println(password)
-	addr := fmt.Sprintf("%s:%s", e.SMTPHost, e.SMTPPort)
-
-	err := smtp.SendMail(addr, auth, from, []string{email}, msg)
+	tmpl, err := template.ParseFiles(utils.GetTemplatePath("mail.html"))
 	if err != nil {
 		return err
 	}
+
+	inf := map[string]string{
+		"Password": password,
+		"URL":      "http://127.0.0.1:8080/login",
+	}
+	var body bytes.Buffer
+	if err := tmpl.Execute(&body, inf); err != nil {
+		return err
+	}
+	params := &resend.SendEmailRequest{
+		From:    "Concert Booking system <onboarding@resend.dev>",
+		To:      []string{email},
+		Subject: "Password reset",
+		Html:    body.String(),
+	}
+
+	sent, err := e.Client.Emails.Send(params)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(sent.Id)
 	return nil
 }

@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+    <body
+        style="
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        "
+    >
+        <div
+            style="
+                background-color: #4a90e2;
+                color: white;
+                padding: 20px;
+                text-align: center;
+                border-radius: 8px 8px 0 0;
+            "
+        >
+            <h1 style="margin: 0">CBS password reset</h1>
+        </div>
+        <div
+            style="
+                background-color: #f9f9f9;
+                padding: 30px;
+                border-radius: 0 0 8px 8px;
+            "
+        >
+            <p>Hello,</p>
+            <p>Your account has been updated. Here is your new password:</p>
+            <div
+                style="
+                    background-color: #fff;
+                    border-left: 4px solid #4a90e2;
+                    padding: 15px;
+                    margin: 20px 0;
+                "
+            >
+                <strong style="font-size: 18px; font-family: monospace"
+                    >{{.Password}}</strong
+                >
+            </div>
+            <p>
+                <strong>Please delete this mail .</strong>
+            </p>
+            <p style="text-align: center; margin-top: 30px">
+                <a
+                    href="{{.URL}}"
+                    style="
+                        background-color: #4a90e2;
+                        color: white;
+                        padding: 12px 30px;
+                        text-decoration: none;
+                        border-radius: 4px;
+                        display: inline-block;
+                    "
+                    >Login Now</a
+                >
+            </p>
+        </div>
+    </body>
+</html>

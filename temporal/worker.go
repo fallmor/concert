@@ -4,7 +4,6 @@ import (
 	"concert/internal/utils"
 	"concert/temporal/activity"
 	"concert/temporal/workflow"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -22,14 +21,6 @@ func main() {
 		log.Printf("Error loading .env file: %v", err)
 		return
 	}
-	smtpHost := os.Getenv("SMTP_HOST")
-	smtpPort := os.Getenv("SMTP_PORT")
-	smtpUser := os.Getenv("SMTP_USER")
-	smtpPass := os.Getenv("SMTP_PASS")
-	if smtpHost == "" || smtpPort == "" {
-		fmt.Printf("could not configure the smpt server %s:%", smtpHost, smtpPort)
-		return
-	}
 	c, err := client.Dial(client.Options{
 		HostPort: "localhost:7233",
 	})
@@ -37,7 +28,7 @@ func main() {
 		log.Fatalf("failed to connect to temporal server: %v", err)
 	}
 	defer c.Close()
-	sendmail := activity.NewEmailActivities(smtpHost, smtpPort, smtpUser, smtpPass)
+	sendmail := activity.NewEmailActivities(os.Getenv("RESEND_API"))
 
 	w := worker.New(c, "email-task-queue", worker.Options{})
 	w.RegisterWorkflow(workflow.SendMailWorkflow)

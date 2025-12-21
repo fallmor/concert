@@ -55,6 +55,7 @@ func (h *Handler) ChiSetRoutes() {
 		r.Post("/register", h.Register)
 		r.Get("/forget-password", h.GetForgetPassword)
 		r.Post("/forget-password", h.ForgetPassword)
+		r.NotFound(h.NotFoundHandler)
 	})
 
 	h.Route.Group(func(r chi.Router) {
