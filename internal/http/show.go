@@ -45,6 +45,7 @@ func (h *Handler) ListAllFan(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListAllShow(w http.ResponseWriter, r *http.Request) {
+	// w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
 	shows, err := h.Service.ListAllShow()
@@ -54,26 +55,47 @@ func (h *Handler) ListAllShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := struct {
-		ShowInfo
-		User *concert.User
-	}{
-		ShowInfo: ShowInfo{Shows: shows},
-		User:     h.getCurrentUser(r),
-	}
+	// data := struct {
+	// 	ShowInfo
+	// 	User *concert.User
+	// }{
+	// 	ShowInfo: ShowInfo{Shows: shows},
+	// 	User:     h.getCurrentUser(r),
+	// }
+	json.NewEncoder(w).Encode(shows)
 
-	tmpl := template.Must(template.ParseFiles(
-		utils.GetTemplatePath("base.html"),
-		utils.GetTemplatePath("allshows.html"),
-	))
+	// tmpl := template.Must(template.ParseFiles(
+	// 	utils.GetTemplatePath("base.html"),
+	// 	utils.GetTemplatePath("allshows.html"),
+	// ))
 
-	if err := tmpl.Execute(w, data); err != nil {
-		log.Printf("Error executing shows template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
+	// if err := tmpl.Execute(w, data); err != nil {
+	// 	log.Printf("Error executing shows template: %v", err)
+	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	// 	return
+	// }
 }
 
+func (h *Handler) GetShowPublic(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	idString := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idString)
+	if err != nil {
+		log.Println("Invalid ID:", err)
+		http.Error(w, "Invalid show ID", http.StatusBadRequest)
+		return
+	}
+
+	show, err := h.Service.GetShowByID(uint(id))
+	if err != nil {
+		http.Error(w, "Could not get the show by ID", http.StatusBadRequest)
+		return
+	}
+	// Calculate available seats
+
+	json.NewEncoder(w).Encode(show)
+}
 func (h *Handler) NewShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
@@ -150,16 +172,16 @@ func (h *Handler) SetShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	place := r.FormValue("place")
-	if place == "" {
-		http.Error(w, "Place is required", http.StatusBadRequest)
+	Venue := r.FormValue("Venue")
+	if Venue == "" {
+		http.Error(w, "Venue is required", http.StatusBadRequest)
 		return
 	}
 
 	show := concert.Show{
 		Date:     date,
 		ArtistID: uint(artistID),
-		Place:    place,
+		Venue:    Venue,
 	}
 
 	_, err = h.Service.SetShow(show)
@@ -217,7 +239,7 @@ func (h *Handler) ParticipateShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name := r.FormValue("nom")
+	name := r.FormValue("Name")
 	showID, err := strconv.ParseUint(r.FormValue("show_id"), 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid ShowID", http.StatusBadRequest)
@@ -236,7 +258,7 @@ func (h *Handler) ParticipateShow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fan := concert.Fan{
-		Nom:    name,
+		Name:   name,
 		ShowID: uint(showID),
 		Show:   show,
 		Price:  price,

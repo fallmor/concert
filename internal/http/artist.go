@@ -86,25 +86,25 @@ func (h *Handler) SetArtist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nom := r.FormValue("nom")
+	Name := r.FormValue("Name")
 	genre := r.FormValue("genre")
-	photoURL := r.FormValue("photo_url")
+	ImageURL := r.FormValue("photo_url")
 	albumURL := r.FormValue("album_url")
 
-	if nom == "" || genre == "" {
+	if Name == "" || genre == "" {
 		http.Error(w, "Name and genre are required", http.StatusBadRequest)
 		return
 	}
 
-	if photoURL == "" {
+	if ImageURL == "" {
 		if file, handler, err := r.FormFile("photo_file"); err == nil {
 			defer file.Close()
 			savedURL, err := h.saveUploadedFile(file, handler, "artists")
 			if err != nil {
 				log.Printf("Error saving photo file: %v", err)
 			} else {
-				photoURL = savedURL
-				log.Printf("Photo saved to: %s", photoURL)
+				ImageURL = savedURL
+				log.Printf("Photo saved to: %s", ImageURL)
 			}
 		}
 	}
@@ -123,13 +123,13 @@ func (h *Handler) SetArtist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	artist := concert.Artist{
-		Nom:      nom,
+		Name:     Name,
 		Genre:    genre,
-		PhotoURL: photoURL,
+		ImageURL: ImageURL,
 		AlbumURL: albumURL,
 	}
 
-	log.Printf("Saving artist to database: Name=%s, PhotoURL=%s, AlbumURL=%s", nom, photoURL, albumURL)
+	log.Printf("Saving artist to database: Name=%s, ImageURL=%s, AlbumURL=%s", Name, ImageURL, albumURL)
 	savedArtist, err := h.Service.SetArtist(artist)
 	if err != nil {
 		log.Printf("Error creating artist: %v", err)
@@ -137,6 +137,6 @@ func (h *Handler) SetArtist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Artist saved successfully - ID: %d, PhotoURL: %s, AlbumURL: %s", savedArtist.ID, savedArtist.PhotoURL, savedArtist.AlbumURL)
+	log.Printf("Artist saved successfully - ID: %d, ImageURL: %s, AlbumURL: %s", savedArtist.ID, savedArtist.ImageURL, savedArtist.AlbumURL)
 	http.Redirect(w, r, "/shows/new", http.StatusSeeOther)
 }

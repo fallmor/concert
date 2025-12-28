@@ -11,25 +11,32 @@ type Service struct {
 }
 
 type Artist struct {
-	ID       uint `gorm:"primaryKey;autoIncrement"`
-	Nom      string
-	Genre    string
-	PhotoURL string `gorm:"type:varchar(500)"`
-	AlbumURL string `gorm:"type:varchar(500)"`
+	ID       uint   `gorm:"primaryKey;autoIncrement" json:"id"`
+	Name     string `json:"name"`
+	Genre    string `json:"genre"`
+	ImageURL string `gorm:"type:varchar(500)" json:"image_url"`
+	AlbumURL string `gorm:"type:varchar(500)" json:"album_url"`
 }
 
 type Show struct {
 	gorm.Model
-	Date     time.Time
-	ArtistID uint   `gorm:"not null"`
-	Artist   Artist `gorm:"foreignKey:ArtistID;references:ID"`
-	Place    string
-	Fans     []Fan `gorm:"foreignKey:ShowID"`
+	Title          *string   `json:"title,omitempty"`
+	Date           time.Time `gorm:"not null" json:"date"`
+	Time           string    `json:"time"`
+	ArtistID       uint      `gorm:"not null" json:"artist_id"`
+	Artist         Artist    `gorm:"foreignKey:ArtistID;references:ID" json:"artist"`
+	Venue          string    `gorm:"not null" json:"venue"`
+	Price          float64   `gorm:"not null" json:"price"`
+	TotalSeats     int       `gorm:"not null" json:"total_seats"`
+	AvailableSeats int       `gorm:"not null" json:"available_seats"`
+	Description    string    `json:"description,omitempty"`
+	ImageURL       string    `json:"image_url,omitempty"`
+	Fans           []Fan     `gorm:"foreignKey:ShowID" json:"-"`
 }
 
 type Fan struct {
 	gorm.Model
-	Nom    string
+	Name   string
 	ShowID uint `gorm:"not null"`
 	Show   Show `gorm:"foreignKey:ShowID;references:ID"`
 	Price  int
@@ -50,7 +57,7 @@ func (s Service) GetFan(name string) ([]Fan, error) {
 		Joins("LEFT JOIN artists ON shows.artist_id = artists.id").
 		Preload("Show").
 		Preload("Show.Artist").
-		Where("fans.nom = ?", name).
+		Where("fans.Name = ?", name).
 		Find(&fan); result.Error != nil {
 		return fan, result.Error
 	}
@@ -62,7 +69,7 @@ func (s Service) GetShow(artistName string) ([]Show, error) {
 	if result := s.Db.
 		Preload("Artist").
 		Joins("INNER JOIN artists ON shows.artist_id = artists.id").
-		Where("nom = ?", artistName).
+		Where("Name = ?", artistName).
 		Find(&shows); result.Error != nil {
 		return nil, result.Error
 	}
@@ -78,6 +85,10 @@ func (s Service) GetShowByID(id uint) (Show, error) {
 		First(&show, id); result.Error != nil {
 		return show, result.Error
 	}
+	var fanCount int64
+	s.Db.Model(&Fan{}).Where("show_id = ?", show.ID).Count(&fanCount)
+	show.AvailableSeats = show.TotalSeats - int(fanCount)
+
 	return show, nil
 }
 

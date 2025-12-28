@@ -128,7 +128,7 @@ func (h *Handler) UpdateShow(w http.ResponseWriter, r *http.Request) {
 
 	show.ArtistID = uint(artistID)
 	show.Date = date
-	show.Place = r.FormValue("place")
+	show.Venue = r.FormValue("Venue")
 
 	_, err = h.Service.SetShow(show)
 	if err != nil {
@@ -196,16 +196,16 @@ func (h *Handler) UpdateArtist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	artist.Nom = r.FormValue("nom")
+	artist.Name = r.FormValue("Name")
 	artist.Genre = r.FormValue("genre")
 
-	if photoURL := r.FormValue("photo_url"); photoURL != "" {
-		artist.PhotoURL = photoURL
+	if ImageURL := r.FormValue("photo_url"); ImageURL != "" {
+		artist.ImageURL = ImageURL
 	} else if file, handler, err := r.FormFile("photo_file"); err == nil {
 		defer file.Close()
 		savedURL, err := h.saveUploadedFile(file, handler, "artists")
 		if err == nil {
-			artist.PhotoURL = savedURL
+			artist.ImageURL = savedURL
 		}
 	}
 
@@ -294,7 +294,7 @@ func (h *Handler) UpdateFan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fan.Nom = r.FormValue("nom")
+	fan.Name = r.FormValue("Name")
 	showID, err := strconv.ParseUint(r.FormValue("show_id"), 10, 64)
 	if err == nil {
 		fan.ShowID = uint(showID)

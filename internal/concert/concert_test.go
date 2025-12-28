@@ -21,76 +21,76 @@ func TestGetFan(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
 
-	artist := Artist{Nom: "Drake", Genre: "Rock"}
+	artist := Artist{Name: "Drake", Genre: "Rock"}
 	db.Create(&artist)
-	show := Show{ArtistID: artist.ID, Place: "Paris", Date: time.Now()}
+	show := Show{ArtistID: artist.ID, Venue: "Paris", Date: time.Now()}
 	db.Create(&show)
 
-	fan := Fan{Nom: "Abdou", ShowID: show.ID, Price: 100}
+	fan := Fan{Name: "Abdou", ShowID: show.ID, Price: 100}
 	db.Create(&fan)
 
 	found, err := service.GetFan("Abdou")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, found)
-	assert.Equal(t, fan.Nom, found[0].Nom)
+	assert.Equal(t, fan.Name, found[0].Name)
 }
 func TestGetShow(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
-	artist := Artist{Nom: "Drake", Genre: "Rock"}
+	artist := Artist{Name: "Drake", Genre: "Rock"}
 	db.Create(&artist)
-	show := Show{ArtistID: artist.ID, Place: "Paris", Date: time.Now()}
+	show := Show{ArtistID: artist.ID, Venue: "Paris", Date: time.Now()}
 	db.Create(&show)
 	found, err := service.GetShow("Drake")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, found)
-	assert.Equal(t, show.Place, found[0].Place)
+	assert.Equal(t, show.Venue, found[0].Venue)
 }
 func TestGetShowByID(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
-	artist := Artist{Nom: "Drake", Genre: "Rock"}
+	artist := Artist{Name: "Drake", Genre: "Rock"}
 	db.Create(&artist)
-	show := Show{ArtistID: artist.ID, Place: "Paris", Date: time.Now()}
+	show := Show{ArtistID: artist.ID, Venue: "Paris", Date: time.Now()}
 	db.Create(&show)
 	found, err := service.GetShowByID(show.ID)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, found)
-	assert.Equal(t, show.Place, found.Place)
+	assert.Equal(t, show.Venue, found.Venue)
 }
 func TestSetShow(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
-	artist := Artist{Nom: "Drake", Genre: "Rock"}
+	artist := Artist{Name: "Drake", Genre: "Rock"}
 	db.Create(&artist)
-	show := Show{ArtistID: artist.ID, Place: "Paris", Date: time.Now()}
+	show := Show{ArtistID: artist.ID, Venue: "Paris", Date: time.Now()}
 	db.Create(&show)
 	found, err := service.SetShow(show)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, found)
-	assert.Equal(t, show.Place, found.Place)
+	assert.Equal(t, show.Venue, found.Venue)
 }
 func TestSetArtist(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
-	artist := Artist{Nom: "Drake", Genre: "Rock"}
+	artist := Artist{Name: "Drake", Genre: "Rock"}
 	db.Create(&artist)
 	found, err := service.SetArtist(artist)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, found)
-	assert.Equal(t, artist.Nom, found.Nom)
+	assert.Equal(t, artist.Name, found.Name)
 }
 func TestParticipateShow(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
-	artist := Artist{Nom: "Drake", Genre: "Rock"}
+	artist := Artist{Name: "Drake", Genre: "Rock"}
 	db.Create(&artist)
-	show := Show{ArtistID: artist.ID, Place: "Paris", Date: time.Now()}
+	show := Show{ArtistID: artist.ID, Venue: "Paris", Date: time.Now()}
 	db.Create(&show)
-	fan := Fan{Nom: "Abdou", ShowID: show.ID, Price: 100}
+	fan := Fan{Name: "Abdou", ShowID: show.ID, Price: 100}
 	db.Create(&fan)
 	found, err := service.ParticipateShow(fan)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, found)
-	assert.Equal(t, fan.Nom, found.Fans[0].Nom)
+	assert.Equal(t, fan.Name, found.Fans[0].Name)
 }

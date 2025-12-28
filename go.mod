@@ -7,6 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/resend/resend-go/v2 v2.28.0
+	github.com/rs/cors v1.11.1
 	github.com/stretchr/testify v1.11.1
 	go.temporal.io/sdk v1.38.0
 	golang.org/x/crypto v0.44.0

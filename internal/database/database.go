@@ -60,6 +60,26 @@ func DbSetup() (*gorm.DB, error) {
 }
 
 func Migrate(db *gorm.DB) error {
+	// db.Exec(`ALTER TABLE shows RENAME COLUMN place TO venue`)
+	// db.Exec(`ALTER TABLE shows ADD COLUMN IF NOT EXISTS title TEXT`)
+	// db.Exec(`ALTER TABLE shows ADD COLUMN IF NOT EXISTS time TEXT`)
+	// db.Exec(`ALTER TABLE shows ADD COLUMN IF NOT EXISTS price DECIMAL(10,2)`)
+	// db.Exec(`ALTER TABLE shows ADD COLUMN IF NOT EXISTS total_seats INTEGER`)
+	// db.Exec(`ALTER TABLE shows ADD COLUMN IF NOT EXISTS available_seats INTEGER`)
+	// db.Exec(`ALTER TABLE shows ADD COLUMN IF NOT EXISTS description TEXT`)
+	// db.Exec(`ALTER TABLE shows ADD COLUMN IF NOT EXISTS image_url TEXT`)
+	//  db.Exec(`UPDATE shows SET title = 'Concert' WHERE title IS NULL`)
+	// db.Exec(`UPDATE shows SET time = '20:00' WHERE time IS NULL`)
+	// db.Exec(`UPDATE shows SET price = 50.0 WHERE price IS NULL`)
+	// db.Exec(`UPDATE shows SET total_seats = 100 WHERE total_seats IS NULL`)
+	// db.Exec(`UPDATE shows SET available_seats = 100 WHERE available_seats IS NULL`)
+
+	// // Step 3: Make columns NOT NULL (now that they have values)
+	// db.Exec(`ALTER TABLE shows ALTER COLUMN title SET NOT NULL`)
+	// db.Exec(`ALTER TABLE shows ALTER COLUMN time SET NOT NULL`)
+	// db.Exec(`ALTER TABLE shows ALTER COLUMN price SET NOT NULL`)
+	// db.Exec(`ALTER TABLE shows ALTER COLUMN total_seats SET NOT NULL`)
+	// db.Exec(`ALTER TABLE shows ALTER COLUMN available_seats SET NOT NULL`)
 
 	if err := db.AutoMigrate(&concert.Artist{}, &concert.User{}, &concert.Show{}, &concert.Fan{}); err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)

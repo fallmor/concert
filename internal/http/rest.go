@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/rs/cors"
 	"go.temporal.io/sdk/client"
 	"gorm.io/gorm"
 )
@@ -42,9 +43,17 @@ func (h *Handler) Close() {
 func (h *Handler) ChiSetRoutes() {
 	h.Route = chi.NewRouter()
 
-	staticDir := utils.GetStaticDir()
-	fileServer := http.FileServer(http.Dir(staticDir))
-	h.Route.Handle("/static/*", http.StripPrefix("/static/", fileServer))
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"}, // Vite dev server
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+	})
+	h.Route.Use(c.Handler)
+
+	// staticDir := utils.GetStaticDir()
+	// fileServer := http.FileServer(http.Dir(staticDir))
+	// h.Route.Handle("/static/*", http.StripPrefix("/static/", fileServer))
 
 	h.Route.Group(func(r chi.Router) {
 		r.Use(RateLimit)
@@ -55,6 +64,8 @@ func (h *Handler) ChiSetRoutes() {
 		r.Post("/register", h.Register)
 		r.Get("/forget-password", h.GetForgetPassword)
 		r.Post("/forget-password", h.ForgetPassword)
+		r.Get("/shows", h.ListAllShow)
+		r.Get("/shows/{id}", h.GetShowPublic)
 		r.NotFound(h.NotFoundHandler)
 	})
 
@@ -64,7 +75,6 @@ func (h *Handler) ChiSetRoutes() {
 		r.Get("/fan/{name}", h.GetFan)
 		r.Get("/show/{artistname}", h.GetShow)
 		r.Get("/fans/new", h.NewFan)
-		r.Get("/shows", h.ListAllShow)
 		r.Get("/artists", h.ListAllArtists)
 		r.Get("/list", h.ListAllFan)
 		r.Post("/submit", h.ParticipateShow)

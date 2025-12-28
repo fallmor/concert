@@ -16,9 +16,9 @@ func TestHandler_GetFan(t *testing.T) {
 	mockService := mocks.MockConcertService{
 		GetFanFunc: func(name string) ([]concert.Fan, error) {
 			return []concert.Fan{
-				{Nom: "Abdou", Price: 50},
-				{Nom: "khady", Price: 100},
-				{Nom: "Aminata", Price: 150},
+				{Name: "Abdou", Price: 50},
+				{Name: "khady", Price: 100},
+				{Name: "Aminata", Price: 150},
 			}, nil
 		},
 	}
@@ -37,8 +37,8 @@ func TestHandler_ListAllShow(t *testing.T) {
 	mockService := mocks.MockConcertService{
 		ListAllShowFunc: func() ([]concert.Show, error) {
 			return []concert.Show{
-				{Place: "Paris", Date: time.Now()},
-				{Place: "Marseille", Date: time.Now()},
+				{Venue: "Paris", Date: time.Now()},
+				{Venue: "Marseille", Date: time.Now()},
 			}, nil
 		},
 	}
@@ -58,9 +58,9 @@ func TestHandler_ListAllFan(t *testing.T) {
 	mockService := mocks.MockConcertService{
 		ListAllFanFunc: func() ([]concert.Fan, error) {
 			return []concert.Fan{
-				{Nom: "Abdou", Price: 50},
-				{Nom: "khady", Price: 100},
-				{Nom: "Aminata", Price: 150},
+				{Name: "Abdou", Price: 50},
+				{Name: "khady", Price: 100},
+				{Name: "Aminata", Price: 150},
 			}, nil
 		},
 	}
@@ -80,7 +80,7 @@ func TestHandler_ListAllFan(t *testing.T) {
 func TestHandler_SetArtist(t *testing.T) {
 	mockService := mocks.MockConcertService{
 		SetArtistFunc: func(artist concert.Artist) (concert.Artist, error) {
-			return concert.Artist{Nom: "Drake", Genre: "Rock", PhotoURL: "https://example.com/photo.jpg", AlbumURL: "https://example.com/album.jpg"}, nil
+			return concert.Artist{Name: "Drake", Genre: "Rock", ImageURL: "https://example.com/photo.jpg", AlbumURL: "https://example.com/album.jpg"}, nil
 		},
 	}
 	handler, err := NewRouter(&mockService, nil)
