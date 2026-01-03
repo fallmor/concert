@@ -2,6 +2,7 @@ package http
 
 import (
 	"concert/internal/concert"
+	"concert/internal/models"
 	"concert/internal/utils"
 	"fmt"
 	"net"
@@ -22,7 +23,8 @@ func SetCookie(w http.ResponseWriter, userID uint) {
 		Value:    fmt.Sprintf("user_%d", userID),
 		Path:     "/",
 		HttpOnly: true,
-		MaxAge:   3600,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   86400,
 	})
 }
 
@@ -63,13 +65,13 @@ func GetCurrentUserID(r *http.Request) (uint, error) {
 	return uint(userID), nil
 }
 
-func GetUserFromCookie(db *gorm.DB, r *http.Request) (*concert.User, error) {
+func GetUserFromCookie(db *gorm.DB, r *http.Request) (*models.User, error) {
 	userID, err := GetCurrentUserID(r)
 	if err != nil {
 		return nil, err
 	}
 
-	var user concert.User
+	var user models.User
 	if err := db.First(&user, userID).Error; err != nil {
 		return nil, err
 	}
@@ -157,7 +159,7 @@ func UpdatePassword(db *gorm.DB, email, password string) error {
 	return nil
 }
 
-func InsertUser(db *gorm.DB, email, username, password, firstName, lastName, role string) (*concert.User, error) {
+func InsertUser(db *gorm.DB, email, username, password, FirstName, LastName, role string) (*concert.User, error) {
 	hashedPassword, err := HashPassword(password)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
@@ -169,8 +171,8 @@ func InsertUser(db *gorm.DB, email, username, password, firstName, lastName, rol
 		Email:        email,
 		Username:     username,
 		PasswordHash: hashedPassword,
-		FirstName:    firstName,
-		LastName:     lastName,
+		FirstName:    FirstName,
+		LastName:     LastName,
 		Role:         role,
 	}
 

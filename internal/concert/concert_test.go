@@ -1,6 +1,7 @@
 package concert
 
 import (
+	"concert/internal/models"
 	"testing"
 	"time"
 
@@ -14,32 +15,70 @@ func SetupTestDB() *gorm.DB {
 	if err != nil {
 		panic("failed to connect database")
 	}
-	db.AutoMigrate(&Artist{}, &Show{}, &Fan{})
+	db.AutoMigrate(&models.Artist{}, &models.Show{}, &models.Booking{})
 	return db
 }
 func TestGetFan(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
 
-	artist := Artist{Name: "Drake", Genre: "Rock"}
+	artist := models.Artist{Name: "Drake", Genre: "Rock"}
 	db.Create(&artist)
-	show := Show{ArtistID: artist.ID, Venue: "Paris", Date: time.Now()}
+
+	show := models.Show{
+		ArtistID:       artist.ID,
+		Venue:          "Paris",
+		Date:           time.Now(),
+		Title:          "Drake Concert",
+		Price:          50.0,
+		TotalSeats:     100,
+		AvailableSeats: 100,
+	}
 	db.Create(&show)
 
-	fan := Fan{Name: "Abdou", ShowID: show.ID, Price: 100}
-	db.Create(&fan)
+	user := models.User{
+		Email:     "toto@gmail.com",
+		Username:  "toto",
+		FirstName: "Abdou",
+		Role:      "user",
+	}
+	db.Create(&user)
 
-	found, err := service.GetFan("Abdou")
+	booking := models.Booking{
+		UserID:      user.ID,
+		ShowID:      show.ID,
+		TicketCount: 2,
+		TotalPrice:  100.0,
+	}
+	db.Create(&booking)
+
+	found, err := service.GetFan("toto")
+
 	assert.NoError(t, err)
 	assert.NotEmpty(t, found)
-	assert.Equal(t, fan.Name, found[0].Name)
+	assert.Equal(t, 1, len(found))
+	assert.Equal(t, booking.ID, found[0].ID)
+	assert.Equal(t, "toto", found[0].User.Username)
+
+	// artist := models.Artist{Name: "Drake", Genre: "Rock"}
+	// db.Create(&artist)
+	// show := models.Show{ArtistID: artist.ID, Venue: "Paris", Date: time.Now()}
+	// db.Create(&show)
+	// myuser := models.User{Email: "totoøgmail.com", Username: "toto", Role: "user", Bookings: []models.Booking{{Show: show, }}}
+	// fan := models.Booking{User: myuser, }
+	// db.Create(&fan)
+
+	// found, err := service.GetFan("Abdou")
+	// assert.NoError(t, err)
+	// assert.NotEmpty(t, found)
+	// assert.Equal(t, fan.Show, found[0])
 }
 func TestGetShow(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
-	artist := Artist{Name: "Drake", Genre: "Rock"}
+	artist := models.Artist{Name: "Drake", Genre: "Rock"}
 	db.Create(&artist)
-	show := Show{ArtistID: artist.ID, Venue: "Paris", Date: time.Now()}
+	show := models.Show{ArtistID: artist.ID, Venue: "Paris", Date: time.Now()}
 	db.Create(&show)
 	found, err := service.GetShow("Drake")
 	assert.NoError(t, err)
@@ -49,9 +88,9 @@ func TestGetShow(t *testing.T) {
 func TestGetShowByID(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
-	artist := Artist{Name: "Drake", Genre: "Rock"}
+	artist := models.Artist{Name: "Drake", Genre: "Rock"}
 	db.Create(&artist)
-	show := Show{ArtistID: artist.ID, Venue: "Paris", Date: time.Now()}
+	show := models.Show{ArtistID: artist.ID, Venue: "Paris", Date: time.Now()}
 	db.Create(&show)
 	found, err := service.GetShowByID(show.ID)
 	assert.NoError(t, err)
@@ -61,9 +100,9 @@ func TestGetShowByID(t *testing.T) {
 func TestSetShow(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
-	artist := Artist{Name: "Drake", Genre: "Rock"}
+	artist := models.Artist{Name: "Drake", Genre: "Rock"}
 	db.Create(&artist)
-	show := Show{ArtistID: artist.ID, Venue: "Paris", Date: time.Now()}
+	show := models.Show{ArtistID: artist.ID, Venue: "Paris", Date: time.Now()}
 	db.Create(&show)
 	found, err := service.SetShow(show)
 	assert.NoError(t, err)
@@ -73,7 +112,7 @@ func TestSetShow(t *testing.T) {
 func TestSetArtist(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
-	artist := Artist{Name: "Drake", Genre: "Rock"}
+	artist := models.Artist{Name: "Drake", Genre: "Rock"}
 	db.Create(&artist)
 	found, err := service.SetArtist(artist)
 	assert.NoError(t, err)
@@ -83,14 +122,39 @@ func TestSetArtist(t *testing.T) {
 func TestParticipateShow(t *testing.T) {
 	db := SetupTestDB()
 	service := NewConcert(db)
-	artist := Artist{Name: "Drake", Genre: "Rock"}
+	artist := models.Artist{Name: "Youssou", Genre: "Rock"}
 	db.Create(&artist)
-	show := Show{ArtistID: artist.ID, Venue: "Paris", Date: time.Now()}
+
+	show := models.Show{
+		ArtistID:       artist.ID,
+		Venue:          "Paris",
+		Date:           time.Now(),
+		Title:          "Drake Concert",
+		Price:          50.0,
+		TotalSeats:     100,
+		AvailableSeats: 100,
+	}
 	db.Create(&show)
-	fan := Fan{Name: "Abdou", ShowID: show.ID, Price: 100}
-	db.Create(&fan)
-	found, err := service.ParticipateShow(fan)
+
+	user := models.User{
+		Email:     "toto1@gmail.com",
+		Username:  "toto1",
+		FirstName: "Abdou",
+		Role:      "user",
+	}
+	db.Create(&user)
+
+	booking := models.Booking{
+		UserID:      user.ID,
+		ShowID:      show.ID,
+		TicketCount: 2,
+		TotalPrice:  100.0,
+	}
+	db.Create(&booking)
+
+	found, err := service.ParticipateShow(booking)
+	t.Error(&found)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, found)
-	assert.Equal(t, fan.Name, found.Fans[0].Name)
+	assert.Equal(t, booking.Show, found)
 }

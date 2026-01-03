@@ -1,16 +1,20 @@
 package http
 
 import (
-	"concert/internal/concert"
+	"concert/internal/models"
 	"concert/internal/utils"
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"text/template"
+
+	"github.com/go-chi/chi/v5"
 )
 
 func (h *Handler) ListAllArtists(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	// w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	w.Header().Set("Content-Type", "application/json")
 
 	artists, err := h.Service.ListAllArtists()
 	if err != nil {
@@ -19,30 +23,32 @@ func (h *Handler) ListAllArtists(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := struct {
-		ArtistInfo
-		User *concert.User
-	}{
-		ArtistInfo: ArtistInfo{Artists: artists},
-		User:       h.getCurrentUser(r),
-	}
+	json.NewEncoder(w).Encode(artists)
 
-	tmpl := template.Must(template.ParseFiles(
-		utils.GetTemplatePath("base.html"),
-		utils.GetTemplatePath("allartists.html"),
-	))
-	if err := tmpl.Execute(w, data); err != nil {
-		log.Printf("Error executing artists template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
+	// data := struct {
+	// 	ArtistInfo
+	// 	User *concert.User
+	// }{
+	// 	ArtistInfo: ArtistInfo{Artists: artists},
+	// 	User:       h.getCurrentUser(r),
+	// }
+
+	// tmpl := template.Must(template.ParseFiles(
+	// 	utils.GetTemplatePath("base.html"),
+	// 	utils.GetTemplatePath("allartists.html"),
+	// ))
+	// if err := tmpl.Execute(w, data); err != nil {
+	// 	log.Printf("Error executing artists template: %v", err)
+	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	// 	return
+	// }
 }
 
 func (h *Handler) NewArtist(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
 	data := struct {
-		User *concert.User
+		User *models.User
 	}{
 		User: h.getCurrentUser(r),
 	}
@@ -63,7 +69,7 @@ func (h *Handler) SetArtist(w http.ResponseWriter, r *http.Request) {
 
 	if contentType == "application/json" {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		var artist concert.Artist
+		var artist models.Artist
 		if err := json.NewDecoder(r.Body).Decode(&artist); err != nil {
 			http.Error(w, "failed to decode the body", http.StatusBadRequest)
 			return
@@ -122,7 +128,7 @@ func (h *Handler) SetArtist(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	artist := concert.Artist{
+	artist := models.Artist{
 		Name:     Name,
 		Genre:    genre,
 		ImageURL: ImageURL,
@@ -139,4 +145,23 @@ func (h *Handler) SetArtist(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Artist saved successfully - ID: %d, ImageURL: %s, AlbumURL: %s", savedArtist.ID, savedArtist.ImageURL, savedArtist.AlbumURL)
 	http.Redirect(w, r, "/shows/new", http.StatusSeeOther)
+}
+
+func (h *Handler) GetArtistPublic(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	idString := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idString)
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
+
+	response, err := h.Service.GetArtistByID(uint(id))
+	if err != nil {
+		http.Error(w, "Artist not found", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(response)
 }

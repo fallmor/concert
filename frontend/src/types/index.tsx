@@ -6,10 +6,20 @@ export interface Concert {
   date: string;
   time: string;
   price: number;
-  total_seats: number;
-  available_seats: number;
+  totalSeats: number;
+  availableSeats: number;
   description?: string;
-  image_url?: string;
+  albumUrl?: string;
+}
+
+export interface User {
+  id: number;
+  email: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  role: "user" | "moderator" | "admin";
+  createdAt?: string;
 }
 
 export interface Artist {
@@ -17,22 +27,44 @@ export interface Artist {
   name: string;
   genre: string;
   bio?: string;
-  image_url?: string;
-  album_url?: string;
+  imageUrl?: string;
 }
 
-export interface User {
-  id: number;
-  username: string;
-  email: string;
-  role: "user" | "moderator" | "admin";
-}
 
 export interface Booking {
   id: number;
-  concertId: number;
   userId: number;
-  numberOfTickets: number;
+  showId: number;
+  show?: Concert;
+  ticketCount: number;
   totalPrice: number;
+  status: 'confirmed' | 'cancelled';
+  createdAt: string;
   bookingDate: string;
+}
+export interface Artist {
+  id: number;
+  name: string;
+  genre: string;
+  bio?: string;
+  shows: Concert[]
+  imageUrl?: string;
+
+}
+
+
+export interface LoginResponse {
+  user: User;
+  token?: string;
+}
+
+export interface RegisterInput {
+  username: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
 }

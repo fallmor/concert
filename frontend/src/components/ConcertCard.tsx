@@ -49,14 +49,14 @@ const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
           justifyContent: 'center',
           fontSize: '64px'
         }}>
-          {concert.artist?.album_url? (
+          {concert.artist?.imageUrl ? (
               <img 
-                src={concert.artist.album_url} 
+              src={concert.artist.imageUrl} 
                 alt={concert.artist.name} 
                 style={{
                   width: '100%',
                   height: '100%',
-                  objectFit: 'cover' // Makes image fill the area
+                  objectFit: 'cover' // Makes image fill 
                 }}
                 loading="lazy"
               />
@@ -133,13 +133,13 @@ const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
                 ${concert.price.toFixed(2)}
               </span>
               
-              {concert.available_seats !== undefined && (
+              {concert.availableSeats !== undefined && (
                 <span style={{ 
                   fontSize: '12px', 
-                  color: concert.available_seats < 20 ? '#dc3545' : '#28a745',
+                  color: concert.availableSeats < 20 ? '#dc3545' : '#28a745',
                   fontWeight: 'bold'
                 }}>
-                  {concert.available_seats} seats left
+                  {concert.availableSeats} seats left
                 </span>
               )}
             </div>

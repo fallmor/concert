@@ -57,7 +57,6 @@ const ConcertsPage: React.FC = () => {
     );
   }
 
-  // Display concerts using the concertCard
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '36px', marginBottom: '30px' }}>

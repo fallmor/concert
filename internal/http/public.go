@@ -1,11 +1,14 @@
 package http
 
 import (
-	"concert/internal/concert"
+	"concert/internal/models"
 	"concert/internal/utils"
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"text/template"
 	"time"
 
@@ -19,12 +22,12 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 	shows, err := h.Service.ListAllShow()
 	if err != nil {
 		log.Printf("Error listing shows for home page: %v", err)
-		shows = []concert.Show{}
+		shows = []models.Show{}
 	}
 
 	data := struct {
 		ShowInfo
-		User *concert.User
+		User *models.User
 	}{
 		ShowInfo: ShowInfo{Shows: shows},
 		User:     h.getCurrentUser(r),
@@ -52,11 +55,12 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println(r)
 	email := r.FormValue("email")
 	username := r.FormValue("username")
 	password := r.FormValue("password")
-	firstName := r.FormValue("first_name")
-	lastName := r.FormValue("last_name")
+	firstName := r.FormValue("FirstName")
+	lastName := r.FormValue("LastName")
 	role := r.FormValue("role")
 
 	// because this value are required
@@ -90,84 +94,208 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+type RegisterRequest struct {
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+}
+
+type UserResponse struct {
+	ID        uint   `json:"id"`
+	Email     string `json:"email"`
+	Username  string `json:"username"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Role      string `json:"role"`
+}
+
+func (h *Handler) RegisterAPI(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var req RegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Failed to decode JSON: %v", err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Unable to parse form", http.StatusBadRequest)
+	log.Printf("RegisterAPI received: %+v", req)
+
+	// Validate
+	if req.Email == "" || req.Username == "" || req.Password == "" {
+		http.Error(w, "Email, username, and password are required", http.StatusBadRequest)
 		return
 	}
 
-	emailOrUsername := r.FormValue("email")
-	password := r.FormValue("password")
-
-	if emailOrUsername == "" || password == "" {
-		http.Error(w, "Email or username and password are required", http.StatusBadRequest)
-		return
-	}
-
-	user, err := AuthenticateUser(h.Db, emailOrUsername, password)
+	exists, err := UserExists(h.Db, req.Email, req.Username)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		log.Printf("Error checking user: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("User logged in successfully: email=%s, username=%s", user.Email, user.Username)
+	if exists {
+		http.Error(w, "Email or username already exists", http.StatusConflict)
+		return
+	}
+
+	var role string
+
+	switch {
+	case strings.HasPrefix(req.Username, "admin-"):
+		role = "admin"
+	case strings.HasPrefix(req.Username, "mod-"):
+	default:
+		role = "user"
+	}
+
+	Hash, _ := HashPassword(req.Password)
+	user, err := InsertUser(
+		h.Db,
+		req.Email,
+		req.Username,
+		Hash,
+		req.FirstName,
+		req.LastName,
+		role,
+	)
+	if err != nil {
+		log.Printf("Error creating user: %v", err)
+		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		return
+	}
 
 	SetCookie(w, user.ID)
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	response := UserResponse{
+		ID:        user.ID,
+		Email:     user.Email,
+		Username:  user.Username,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Role:      user.Role,
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
 }
 
-func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
-	// Clear session cookie
-	DeleteCookie(w)
-
-	// Redirect to home page
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
-func (h *Handler) GetLogin(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	tmpl := template.Must(template.ParseFiles(
-		utils.GetTemplatePath("base.html"),
-		utils.GetTemplatePath("login.html"),
-	))
-	if err := tmpl.Execute(w, nil); err != nil {
-		log.Printf("Error executing login template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+func (h *Handler) LoginAPI(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var req LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Failed to decode JSON: %v", err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-}
-
-func (h *Handler) GetRegister(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	tmpl := template.Must(template.ParseFiles(
-		utils.GetTemplatePath("base.html"),
-		utils.GetTemplatePath("register.html"),
-	))
-	if err := tmpl.Execute(w, nil); err != nil {
-		log.Printf("Error executing register template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-}
-
-func (h *Handler) NotFoundHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotFound)
-	tmpl := template.Must(template.ParseFiles(
-		utils.GetTemplatePath("base.html"),
-		utils.GetTemplatePath("error.html"),
-	))
-	err := tmpl.Execute(w, nil)
+	user, err := AuthenticateUser(h.Db, req.Email, req.Password)
 	if err != nil {
-		http.Error(w, "404 - Page Not Found", http.StatusNotFound)
+		log.Printf("Authentication failed: %v", err)
+		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}
+
+	SetCookie(w, user.ID)
+	log.Printf("User logged in: %s", user.Username)
+
+	response := UserResponse{
+		ID:        user.ID,
+		Email:     user.Email,
+		Username:  user.Username,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Role:      user.Role,
+	}
+
+	json.NewEncoder(w).Encode(response)
 }
+
+// func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+// 	if r.Method != http.MethodPost {
+// 		http.Redirect(w, r, "/login", http.StatusSeeOther)
+// 		return
+// 	}
+
+// 	if err := r.ParseForm(); err != nil {
+// 		http.Error(w, "Unable to parse form", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	emailOrUsername := r.FormValue("email")
+// 	password := r.FormValue("password")
+
+// 	if emailOrUsername == "" || password == "" {
+// 		http.Error(w, "Email or username and password are required", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	user, err := AuthenticateUser(h.Db, emailOrUsername, password)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusUnauthorized)
+// 		return
+// 	}
+
+// 	log.Printf("User logged in successfully: email=%s, username=%s", user.Email, user.Username)
+
+// 	SetCookie(w, user.ID)
+
+// 	http.Redirect(w, r, "/", http.StatusSeeOther)
+// }
+
+// func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+// 	// Clear session cookie
+// 	DeleteCookie(w)
+
+// 	// Redirect to home page
+// 	http.Redirect(w, r, "/", http.StatusSeeOther)
+// }
+
+// func (h *Handler) GetLogin(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+// 	tmpl := template.Must(template.ParseFiles(
+// 		utils.GetTemplatePath("base.html"),
+// 		utils.GetTemplatePath("login.html"),
+// 	))
+// 	if err := tmpl.Execute(w, nil); err != nil {
+// 		log.Printf("Error executing login template: %v", err)
+// 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+// 		return
+// 	}
+// }
+
+// func (h *Handler) GetRegister(w http.ResponseWriter, r *http.Request) {
+// 	//w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+// 	w.Header().Set("Content-Type", "application/json")
+// 	// tmpl := template.Must(template.ParseFiles(
+// 	// 	utils.GetTemplatePath("base.html"),
+// 	// 	utils.GetTemplatePath("register.html"),
+// 	// ))
+// 	// if err := tmpl.Execute(w, nil); err != nil {
+// 	// 	log.Printf("Error executing register template: %v", err)
+// 	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+// 	// 	return
+// 	// }
+// }
+
+// func (h *Handler) NotFoundHandler(w http.ResponseWriter, r *http.Request) {
+// 	w.WriteHeader(http.StatusNotFound)
+// 	tmpl := template.Must(template.ParseFiles(
+// 		utils.GetTemplatePath("base.html"),
+// 		utils.GetTemplatePath("error.html"),
+// 	))
+// 	err := tmpl.Execute(w, nil)
+// 	if err != nil {
+// 		http.Error(w, "404 - Page Not Found", http.StatusNotFound)
+// 		return
+// 	}
+// }
 
 func (h *Handler) ForgetPassword(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {

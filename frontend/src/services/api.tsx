@@ -1,15 +1,14 @@
-import type { Concert, Artist, User } from "../types";
+import type { Concert, Artist, User, LoginResponse, Booking } from "../types";
 
-// Your Go backend URL
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "/api";
 
-// Helper function for API calls
 async function fetchAPI<T>(
   endpoint: string,
   options?: RequestInit,
 ): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
+    credentials: 'include',
     headers: {
       "Content-Type": "application/json",
       ...options?.headers,
@@ -23,19 +22,17 @@ async function fetchAPI<T>(
   return response.json();
 }
 
-// Concert/Show APIs
 export const concertAPI = {
   // Get all concerts
   getAll: async (): Promise<Concert[]> => {
-    return fetchAPI<Concert[]>("/shows");
+    return fetchAPI<Concert[]>("/public/shows");
   },
 
-  // Get single concert
   getById: async (id: number): Promise<Concert> => {
-    return fetchAPI<Concert>(`/shows/${id}`);
+    return fetchAPI<Concert>(`/public/shows/${id}`);
   },
 
-  // Create concert (admin only)
+  // Create concert
   create: async (
     concert: Omit<Concert, "id">,
     token: string,
@@ -50,14 +47,14 @@ export const concertAPI = {
   },
 };
 
-// Artist APIs
+// Artist API
 export const artistAPI = {
   getAll: async (): Promise<Artist[]> => {
-    return fetchAPI<Artist[]>("/artists");
+    return fetchAPI<Artist[]>("/public/artists");
   },
 
   getById: async (id: number): Promise<Artist> => {
-    return fetchAPI<Artist>(`/artists/${id}`);
+    return fetchAPI<Artist>(`/public/artists/${id}`);
   },
 };
 
@@ -67,40 +64,53 @@ export const authAPI = {
     username: string,
     email: string,
     password: string,
+    firstName?: string,
+    lastName?: string
   ): Promise<User> => {
-    return fetchAPI<User>("/users/register", {
+    return fetchAPI<User>("/public/register", {
       method: "POST",
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify({
+        username, email, password, firstName,
+        lastName
+      }),
     });
   },
 
   login: async (
     email: string,
     password: string,
-  ): Promise<{ user: User; token: string }> => {
-    return fetchAPI<{ user: User; token: string }>("/users/login", {
+  ): Promise<User> => {
+    return fetchAPI<User>("/public/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
   },
+  getCurrentUser: async (token: string): Promise<User> => {
+    return fetchAPI<User>('/me', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  },
 };
 
-// Booking APIs
+// Booking
+
 export const bookingAPI = {
-  create: async (
-    concertId: number,
-    numberOfTickets: number,
-    token: string,
-  ): Promise<any> => {
-    return fetchAPI<any>("/bookings", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        show_id: concertId,
-        tickets: numberOfTickets,
-      }),
+  create: async (showId: number, ticketCount: number): Promise<Booking> => {
+    return fetchAPI<Booking>("/bookings", {
+      method: 'POST',
+      body: JSON.stringify({ showId, ticketCount })
+    });
+  },
+
+  getMyBookings: async (): Promise<Booking[]> => {
+    return fetchAPI<Booking[]>('/bookings');
+  },
+
+  cancel: async (bookingId: number): Promise<void> => {
+    return fetchAPI<void>(`/bookings/${bookingId}`, {
+      method: 'DELETE',
     });
   },
 };

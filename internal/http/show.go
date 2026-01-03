@@ -1,7 +1,7 @@
 package http
 
 import (
-	"concert/internal/concert"
+	"concert/internal/models"
 
 	"concert/internal/utils"
 	"encoding/json"
@@ -26,7 +26,7 @@ func (h *Handler) ListAllFan(w http.ResponseWriter, r *http.Request) {
 
 	data := struct {
 		FanInfo
-		User *concert.User
+		User *models.User
 	}{
 		FanInfo: FanInfo{Fans: allFans},
 		User:    h.getCurrentUser(r),
@@ -46,7 +46,8 @@ func (h *Handler) ListAllFan(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) ListAllShow(w http.ResponseWriter, r *http.Request) {
 	// w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	// w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	w.Header().Set("Content-Type", "application/json")
 
 	shows, err := h.Service.ListAllShow()
 	if err != nil {
@@ -108,7 +109,7 @@ func (h *Handler) NewShow(w http.ResponseWriter, r *http.Request) {
 
 	data := struct {
 		ArtistInfo
-		User *concert.User
+		User *models.User
 	}{
 		ArtistInfo: ArtistInfo{Artists: artists},
 		User:       h.getCurrentUser(r),
@@ -130,7 +131,7 @@ func (h *Handler) SetShow(w http.ResponseWriter, r *http.Request) {
 
 	if contentType == "application/json" {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		var show concert.Show
+		var show models.Show
 		if err := json.NewDecoder(r.Body).Decode(&show); err != nil {
 			http.Error(w, "failed to decode the body", http.StatusBadRequest)
 			return
@@ -178,7 +179,7 @@ func (h *Handler) SetShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	show := concert.Show{
+	show := models.Show{
 		Date:     date,
 		ArtistID: uint(artistID),
 		Venue:    Venue,
@@ -207,7 +208,7 @@ func (h *Handler) GetShow(w http.ResponseWriter, r *http.Request) {
 
 	data := struct {
 		ShowInfo
-		User *concert.User
+		User *models.User
 	}{
 		ShowInfo: ShowInfo{Shows: showDetails},
 		User:     h.getCurrentUser(r),
@@ -239,7 +240,7 @@ func (h *Handler) ParticipateShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name := r.FormValue("Name")
+	//name := r.FormValue("Name")
 	showID, err := strconv.ParseUint(r.FormValue("show_id"), 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid ShowID", http.StatusBadRequest)
@@ -257,12 +258,12 @@ func (h *Handler) ParticipateShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fan := concert.Fan{
-		Name:   name,
-		ShowID: uint(showID),
-		Show:   show,
-		Price:  price,
-		UserID: user.ID,
+	fan := models.Booking{
+		User:       *user,
+		ShowID:     uint(showID),
+		Show:       show,
+		TotalPrice: float64(price),
+		UserID:     user.ID,
 	}
 
 	_, err = h.Service.ParticipateShow(fan)

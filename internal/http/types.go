@@ -2,6 +2,7 @@ package http
 
 import (
 	"concert/internal/concert"
+	"concert/internal/models"
 
 	"github.com/go-chi/chi/v5"
 	"go.temporal.io/sdk/client"
@@ -17,23 +18,23 @@ type Handler struct {
 
 type PageData struct {
 	Title string
-	Fans  []concert.Fan
+	Fans  []models.Booking
 }
 
 type ShowInfo struct {
-	Shows []concert.Show
+	Shows []models.Show
 }
 
 type FanInfo struct {
-	Fans []concert.Fan
+	Fans []models.Booking
 }
 
 type ArtistInfo struct {
-	Artists []concert.Artist
+	Artists []models.Artist
 }
 
 type UserInfo struct {
-	Users []concert.User
+	Users []models.User
 }
 
 type TemporalUserInput struct {

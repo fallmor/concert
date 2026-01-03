@@ -77,8 +77,8 @@ const ConcertDetailPage: React.FC = () => {
     );
   }
 
-  const isAlmostSoldOut = concert.available_seats < 20;
-  const isSoldOut = concert.available_seats === 0;
+  const isAlmostSoldOut = concert.availableSeats < 20;
+  const isSoldOut = concert.availableSeats === 0;
 
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
@@ -198,7 +198,7 @@ const ConcertDetailPage: React.FC = () => {
                 fontWeight: 'bold', 
                 color: isSoldOut ? '#dc3545' : isAlmostSoldOut ? '#ffc107' : '#28a745' 
               }}>
-                {isSoldOut ? 'SOLD OUT' : `${concert.available_seats} / ${concert.total_seats} seats`}
+                {isSoldOut ? 'SOLD OUT' : `${concert.availableSeats} / ${concert.totalSeats} seats`}
               </div>
               {isAlmostSoldOut && !isSoldOut && (
                 <div style={{ fontSize: '14px', color: '#4b4444ff', marginTop: '5px' }}>
@@ -238,10 +238,7 @@ const ConcertDetailPage: React.FC = () => {
             </h2>
             <button
               disabled={isSoldOut}
-              onClick={() => {
-                // TODO: Navigate to booking page
-                alert(`Booking for ${concert.title} - Coming soon!`);
-              }}
+              onClick={() => navigate(`/book/${concert.ID}`)} 
               style={{
                 padding: '18px 50px',
                 fontSize: '20px',

@@ -1,7 +1,7 @@
 package http
 
 import (
-	"concert/internal/concert"
+	"concert/internal/models"
 	"concert/internal/utils"
 	"log"
 	"net/http"
@@ -29,12 +29,12 @@ func (h *Handler) GetModerator(w http.ResponseWriter, r *http.Request) {
 		TotalShows   int64
 		TotalArtists int64
 		TotalFans    int64
-		User         *concert.User
+		User         *models.User
 	}
 
-	h.Db.Model(&concert.Show{}).Count(&stats.TotalShows)
-	h.Db.Model(&concert.Artist{}).Count(&stats.TotalArtists)
-	h.Db.Model(&concert.Fan{}).Count(&stats.TotalFans)
+	h.Db.Model(&models.Show{}).Count(&stats.TotalShows)
+	h.Db.Model(&models.Artist{}).Count(&stats.TotalArtists)
+	h.Db.Model(&models.Booking{}).Count(&stats.TotalFans)
 	stats.User = h.getCurrentUser(r)
 
 	tmpl := template.Must(template.ParseFiles(
@@ -73,9 +73,9 @@ func (h *Handler) EditShow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Show    concert.Show
-		Artists []concert.Artist
-		User    *concert.User
+		Show    models.Show
+		Artists []models.Artist
+		User    *models.User
 	}{
 		Show:    show,
 		Artists: artists,
@@ -150,7 +150,7 @@ func (h *Handler) EditArtist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var artist concert.Artist
+	var artist models.Artist
 	if err := h.Db.First(&artist, artistID).Error; err != nil {
 		log.Printf("Error getting artist %d: %v", artistID, err)
 		http.Error(w, "Artist not found", http.StatusNotFound)
@@ -158,8 +158,8 @@ func (h *Handler) EditArtist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Artist concert.Artist
-		User   *concert.User
+		Artist models.Artist
+		User   *models.User
 	}{
 		Artist: artist,
 		User:   h.getCurrentUser(r),
@@ -189,7 +189,7 @@ func (h *Handler) UpdateArtist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var artist concert.Artist
+	var artist models.Artist
 	if err := h.Db.First(&artist, artistID).Error; err != nil {
 		log.Printf("Error getting artist %d: %v", artistID, err)
 		http.Error(w, "Artist not found", http.StatusNotFound)
@@ -239,7 +239,7 @@ func (h *Handler) EditFan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fan concert.Fan
+	var fan models.Booking
 	if err := h.Db.Preload("Show").Preload("Show.Artist").First(&fan, fanID).Error; err != nil {
 		log.Printf("Error getting fan %d: %v", fanID, err)
 		http.Error(w, "Fan not found", http.StatusNotFound)
@@ -254,9 +254,9 @@ func (h *Handler) EditFan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Fan   concert.Fan
-		Shows []concert.Show
-		User  *concert.User
+		Fan   models.Booking
+		Shows []models.Show
+		User  *models.User
 	}{
 		Fan:   fan,
 		Shows: shows,
@@ -287,22 +287,22 @@ func (h *Handler) UpdateFan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fan concert.Fan
+	var fan models.Booking
 	if err := h.Db.First(&fan, fanID).Error; err != nil {
 		log.Printf("Error getting fan %d: %v", fanID, err)
 		http.Error(w, "Fan not found", http.StatusNotFound)
 		return
 	}
 
-	fan.Name = r.FormValue("Name")
+	fan.User.FirstName = r.FormValue("Name")
 	showID, err := strconv.ParseUint(r.FormValue("show_id"), 10, 64)
 	if err == nil {
 		fan.ShowID = uint(showID)
 	}
-	price, err := strconv.Atoi(r.FormValue("price"))
-	if err == nil {
-		fan.Price = price
-	}
+	// price, err := strconv.Atoi(r.FormValue("price"))
+	// if err == nil {
+	// 	fan.Price = price
+	// }
 
 	if err := h.Db.Save(&fan).Error; err != nil {
 		log.Printf("Error updating fan: %v", err)

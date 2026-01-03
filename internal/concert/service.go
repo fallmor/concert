@@ -1,20 +1,25 @@
 package concert
 
+import "concert/internal/models"
+
 type ConcertService interface {
-	GetFan(name string) ([]Fan, error)
-	GetShow(artistName string) ([]Show, error)
-	GetShowByID(id uint) (Show, error)
-	SetShow(show Show) (Show, error)
-	SetArtist(artist Artist) (Artist, error)
-	ParticipateShow(fan Fan) (Show, error)
-	ListAllShow() ([]Show, error)
-	ListAllFan() ([]Fan, error)
-	ListAllArtists() ([]Artist, error)
-	GetAllUsers() ([]User, error)
+	GetFan(name string) ([]models.Booking, error)
+	GetShow(artistName string) ([]models.Show, error)
+	GetShowByID(id uint) (models.Show, error)
+	SetShow(show models.Show) (models.Show, error)
+	SetArtist(artist models.Artist) (models.Artist, error)
+	ParticipateShow(fan models.Booking) (models.Show, error)
+	ListAllShow() ([]models.Show, error)
+	ListAllFan() ([]models.Booking, error)
+	ListAllArtists() ([]models.Artist, error)
+	GetArtistByID(id uint) (ArtistShow, error)
+	GetAllUsers() ([]models.User, error)
 	DeleteShow(id uint) error
 	DeleteArtist(id uint) error
 	DeleteFan(id uint) error
-	UpdateShow(show Show) (Show, error)
-	UpdateArtist(artist Artist) (Artist, error)
-	UpdateFan(fan Fan) (Fan, error)
+	UpdateShow(show models.Show) (models.Show, error)
+	UpdateArtist(artist models.Artist) (models.Artist, error)
+	UpdateFan(fan models.Booking) (models.Booking, error)
+	GetMyBookings(user models.User) ([]models.Booking, error)
+	GetBookingById(id uint) (models.Booking, error)
 }

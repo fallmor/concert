@@ -2,6 +2,7 @@ package http
 
 import (
 	"concert/internal/concert"
+	"concert/internal/models"
 	"concert/internal/utils"
 	"encoding/json"
 	"fmt"
@@ -58,28 +59,41 @@ func (h *Handler) ChiSetRoutes() {
 	h.Route.Group(func(r chi.Router) {
 		r.Use(RateLimit)
 		r.Get("/", h.Home)
-		r.Get("/login", h.GetLogin)
-		r.Post("/login", h.Login)
-		r.Get("/register", h.GetRegister)
-		r.Post("/register", h.Register)
+		// r.Get("/login", h.GetLogin)
+		// r.Post("/login", h.Login)
+		// r.Get("/register", h.GetRegister)
+		// r.Post("/register", h.Register)
+		r.Post("/api/public/register", h.RegisterAPI)
+		r.Post("/api/public/login", h.LoginAPI)
 		r.Get("/forget-password", h.GetForgetPassword)
 		r.Post("/forget-password", h.ForgetPassword)
-		r.Get("/shows", h.ListAllShow)
-		r.Get("/shows/{id}", h.GetShowPublic)
-		r.NotFound(h.NotFoundHandler)
+		r.Get("/api/public/shows", h.ListAllShow)
+		r.Get("/api/public/shows/{id}", h.GetShowPublic)
+		r.Get("/api/public/artists/{id}", h.GetArtistPublic)
+		r.Get("/api/public/artists", h.ListAllArtists)
+		//	r.NotFound(h.NotFoundHandler)
+		r.Post("/api/bookings", h.CreateBooking)
+		r.Get("/api/bookings", h.GetMyBookings)
+		r.Delete("/api/bookings/{id}", h.CancelBooking)
 	})
 
+	h.Route.Group(func(r chi.Router) {
+		r.Use(NeedsAuth(h.Db)) // ← Apply auth middleware
+
+		r.Post("/api/bookings", h.CreateBooking)        // ← ADD THIS
+		r.Get("/api/bookings", h.GetMyBookings)         // ← ADD THIS
+		r.Delete("/api/bookings/{id}", h.CancelBooking) // ← ADD THIS
+	})
 	h.Route.Group(func(r chi.Router) {
 		r.Use(NeedsAuth(h.Db))
 
 		r.Get("/fan/{name}", h.GetFan)
 		r.Get("/show/{artistname}", h.GetShow)
 		r.Get("/fans/new", h.NewFan)
-		r.Get("/artists", h.ListAllArtists)
 		r.Get("/list", h.ListAllFan)
 		r.Post("/submit", h.ParticipateShow)
 		r.Post("/upload/image", h.UploadImage)
-		r.Post("/logout", h.Logout)
+		//r.Post("/logout", h.Logout)
 		r.Get("/profile", h.GetProfile)
 	})
 
@@ -188,7 +202,7 @@ func (h *Handler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	//  this struct satisfies both templates:
 	// base.html and profile.html
 	data := struct {
-		User      *concert.User
+		User      *models.User
 		ID        uint
 		CreatedAt time.Time
 		UpdatedAt time.Time
@@ -198,7 +212,7 @@ func (h *Handler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		FirstName string
 		LastName  string
 		Role      string
-		Fans      []concert.Fan
+		Fans      []models.Booking
 	}{
 		User:      user,
 		ID:        user.ID,
@@ -210,7 +224,7 @@ func (h *Handler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Role:      user.Role,
-		Fans:      user.Fans,
+		Fans:      user.Bookings,
 	}
 
 	tmpl := template.Must(template.ParseFiles(
