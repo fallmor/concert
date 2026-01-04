@@ -9,11 +9,11 @@ export interface Concert {
   totalSeats: number;
   availableSeats: number;
   description?: string;
-  albumUrl?: string;
+  imageUrl?: string;
 }
 
 export interface User {
-  id: number;
+  ID: number;
   email: string;
   username: string;
   firstName?: string;
@@ -23,7 +23,7 @@ export interface User {
 }
 
 export interface Artist {
-  id: number;
+  ID: number;
   name: string;
   genre: string;
   bio?: string;
@@ -32,7 +32,7 @@ export interface Artist {
 
 
 export interface Booking {
-  id: number;
+  ID: number;
   userId: number;
   showId: number;
   show?: Concert;
@@ -51,7 +51,6 @@ export interface Artist {
   imageUrl?: string;
 
 }
-
 
 export interface LoginResponse {
   user: User;

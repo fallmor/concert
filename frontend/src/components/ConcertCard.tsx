@@ -49,9 +49,9 @@ const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
           justifyContent: 'center',
           fontSize: '64px'
         }}>
-          {concert.artist?.imageUrl ? (
+          {concert.imageUrl ? (
               <img 
-              src={concert.artist.imageUrl} 
+              src={concert.imageUrl} 
                 alt={concert.artist.name} 
                 style={{
                   width: '100%',
@@ -130,7 +130,7 @@ const ConcertCard: React.FC<ConcertCardProps> = ({ concert }) => {
                 fontWeight: 'bold', 
                 color: '#007bff' 
               }}>
-                ${concert.price.toFixed(2)}
+                €{concert.price.toFixed(2)}
               </span>
               
               {concert.availableSeats !== undefined && (

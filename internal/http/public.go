@@ -122,7 +122,6 @@ func (h *Handler) RegisterAPI(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("RegisterAPI received: %+v", req)
 
-	// Validate
 	if req.Email == "" || req.Username == "" || req.Password == "" {
 		http.Error(w, "Email, username, and password are required", http.StatusBadRequest)
 		return
@@ -150,12 +149,11 @@ func (h *Handler) RegisterAPI(w http.ResponseWriter, r *http.Request) {
 		role = "user"
 	}
 
-	Hash, _ := HashPassword(req.Password)
 	user, err := InsertUser(
 		h.Db,
 		req.Email,
 		req.Username,
-		Hash,
+		req.Password,
 		req.FirstName,
 		req.LastName,
 		role,

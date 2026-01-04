@@ -12,7 +12,7 @@ type ConcertService interface {
 	ListAllShow() ([]models.Show, error)
 	ListAllFan() ([]models.Booking, error)
 	ListAllArtists() ([]models.Artist, error)
-	GetArtistByID(id uint) (ArtistShow, error)
+	GetArtistByID(id uint) (models.Artist, error)
 	GetAllUsers() ([]models.User, error)
 	DeleteShow(id uint) error
 	DeleteArtist(id uint) error
@@ -21,5 +21,7 @@ type ConcertService interface {
 	UpdateArtist(artist models.Artist) (models.Artist, error)
 	UpdateFan(fan models.Booking) (models.Booking, error)
 	GetMyBookings(user models.User) ([]models.Booking, error)
+	GetAllBookings() ([]models.Booking, error)
 	GetBookingById(id uint) (models.Booking, error)
+	CountConfirmSeats(id uint) int64
 }

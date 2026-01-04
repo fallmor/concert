@@ -76,8 +76,7 @@ const RegisterPage: React.FC = () => {
     try {
       setLoading(true);
       await register(formData.username, formData.email, formData.firstName, formData.lastName, formData.password);
-      
-      // Redirect to home page after successful registration
+
       navigate('/');
     } catch (error: any) {
       setErrors(prev => ({

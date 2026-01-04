@@ -23,7 +23,6 @@ async function fetchAPI<T>(
 }
 
 export const concertAPI = {
-  // Get all concerts
   getAll: async (): Promise<Concert[]> => {
     return fetchAPI<Concert[]>("/public/shows");
   },
@@ -32,7 +31,6 @@ export const concertAPI = {
     return fetchAPI<Concert>(`/public/shows/${id}`);
   },
 
-  // Create concert
   create: async (
     concert: Omit<Concert, "id">,
     token: string,
@@ -47,7 +45,6 @@ export const concertAPI = {
   },
 };
 
-// Artist API
 export const artistAPI = {
   getAll: async (): Promise<Artist[]> => {
     return fetchAPI<Artist[]>("/public/artists");
@@ -58,7 +55,7 @@ export const artistAPI = {
   },
 };
 
-// User/Auth APIs
+
 export const authAPI = {
   register: async (
     username: string,
@@ -85,6 +82,16 @@ export const authAPI = {
       body: JSON.stringify({ email, password }),
     });
   },
+
+  forget: async (
+    email: string
+  ): Promise<string> => {
+    return fetchAPI<string>("/public/forget", {
+      method: "Post",
+      body: JSON.stringify({ email })
+    });
+
+  },
   getCurrentUser: async (token: string): Promise<User> => {
     return fetchAPI<User>('/me', {
       headers: {
@@ -94,7 +101,6 @@ export const authAPI = {
   },
 };
 
-// Booking
 
 export const bookingAPI = {
   create: async (showId: number, ticketCount: number): Promise<Booking> => {

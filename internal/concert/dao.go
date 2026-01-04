@@ -94,6 +94,9 @@ func (s Service) SetShow(show models.Show) (models.Show, error) {
 	if result := s.Db.Save(&show); result.Error != nil {
 		return models.Show{}, result.Error
 	}
+	if err := s.Db.Preload("Artist").First(&show, show.ID).Error; err != nil {
+		return models.Show{}, err
+	}
 	return show, nil
 }
 func (s Service) SetArtist(artist models.Artist) (models.Artist, error) {
@@ -140,10 +143,10 @@ func (s Service) ListAllArtists() ([]models.Artist, error) {
 	return artists, nil
 }
 
-func (s Service) GetUserByID(id uint) (User, error) {
-	var user User
+func (s Service) GetUserByID(id uint) (models.User, error) {
+	var user models.User
 	if result := s.Db.First(&user, id); result.Error != nil {
-		return User{}, result.Error
+		return models.User{}, result.Error
 	}
 	return user, nil
 }
@@ -156,15 +159,13 @@ func (s Service) GetAllUsers() ([]models.User, error) {
 	return users, nil
 }
 
-func (s Service) GetArtistByID(id uint) (ArtistShow, error) {
+func (s Service) GetArtistByID(id uint) (models.Artist, error) {
 	var artist models.Artist
-	if result := s.Db.First(&artist, id); result.Error != nil {
-		return ArtistShow{}, result.Error
+	if result := s.Db.Preload("Show").Preload("Show.Artist").First(&artist, id); result.Error != nil {
+		return models.Artist{}, result.Error
 	}
-	var shows []models.Show
-	s.Db.Where("artist_id = ?", id).Find(&shows)
 
-	return ArtistShow{Artist: artist, Shows: shows}, nil
+	return artist, nil
 }
 
 func (s Service) GetFanByID(id uint) (models.Booking, error) {
@@ -221,6 +222,7 @@ func (s Service) GetMyBookings(user models.User) ([]models.Booking, error) {
 	var bookings []models.Booking
 	if err := s.Db.
 		Preload("Show.Artist").
+		Preload("User").
 		Where("user_id = ? AND status = ?", user.ID, "confirmed").
 		Order("created_at DESC").
 		Find(&bookings).Error; err != nil {
@@ -229,10 +231,27 @@ func (s Service) GetMyBookings(user models.User) ([]models.Booking, error) {
 	return bookings, nil
 }
 
+func (s Service) GetAllBookings() ([]models.Booking, error) {
+	var bookings []models.Booking
+	if err := s.Db.
+		Preload("Show.Artist").
+		Preload("User").
+		Order("created_at DESC").
+		Find(&bookings).Error; err != nil {
+		return bookings, err
+	}
+	return bookings, nil
+}
 func (s Service) GetBookingById(id uint) (models.Booking, error) {
 	var booking models.Booking
 	if err := s.Db.Preload("Show").First(&booking, id).Error; err != nil {
 		return models.Booking{}, nil
 	}
 	return booking, nil
+}
+
+func (s Service) CountConfirmSeats(id uint) int64 {
+	var bookingCount int64
+	s.Db.Model(&models.Booking{}).Where("show_id = ? AND status = ?", id, "confirmed").Count(&bookingCount)
+	return bookingCount
 }

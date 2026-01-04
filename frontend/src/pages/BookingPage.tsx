@@ -51,7 +51,7 @@ const MyBookingsPage: React.FC = () => {
       
       setBookings(prev => 
         prev.map(b => 
-          b.id === bookingId 
+            b.ID === bookingId 
             ? { ...b, status: 'cancelled' as const }
             : b
         )
@@ -141,7 +141,7 @@ const MyBookingsPage: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {bookings.map(booking => (
             <BookingCard
-              key={booking.id}
+                  key={booking.ID}
               booking={booking}
               onCancel={handleCancel}
             />
@@ -216,12 +216,12 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onCancel }) => {
           fontWeight: 'bold',
           color: isCancelled ? '#999' : '#007bff'
         }}>
-          ${booking.totalPrice.toFixed(2)}
+                  €{booking.totalPrice.toFixed(2)}
         </div>
 
         {!isCancelled && (
           <button
-            onClick={() => onCancel(booking.id)}
+                      onClick={() => onCancel(booking.ID)}
             style={{
               padding: '8px 20px',
               backgroundColor: '#dc3545',

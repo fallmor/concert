@@ -43,7 +43,7 @@ const ConcertsPage: React.FC = () => {
         padding: '100px',
         color: '#dc3545'
       }}>
-        <h2>❌ {error}</h2>
+        <h2> {error}</h2>
         <p>Make sure your Go backend is running on http://localhost:8080</p>
       </div>
     );

@@ -42,10 +42,10 @@ const ArtistsPage: React.FC = () => {
     );
   }
 
-  // Get unique genres
+  // get unique genres
   const genres = ['all', ...new Set(artists.map(a => a.genre).filter(Boolean))];
 
-  // Filter artists by genre
+  // filter artists by genre
   const filteredArtists = selectedGenre === 'all' 
     ? artists 
     : artists.filter(a => a.genre === selectedGenre);

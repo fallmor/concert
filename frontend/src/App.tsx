@@ -11,6 +11,8 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import BookingPage from "./pages/BookingPage";
 import MyBookingsPage from "./pages/BookingPage";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminShows from "./pages/AdminShows";
 
 function App() {
 
@@ -37,6 +39,8 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/my-bookings" element={<MyBookingsPage />} />
             <Route path="/book/:id" element={<BookingPage />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/shows" element={<AdminShows />} />
           </Routes>
         </main>
 

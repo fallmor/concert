@@ -1,7 +1,6 @@
 package http
 
 import (
-	"concert/internal/concert"
 	"concert/internal/models"
 	"concert/internal/utils"
 	"fmt"
@@ -123,7 +122,7 @@ func VerifyPassword(password, hash string) bool {
 
 // checks if a user with the given email or username already exists
 func UserExists(db *gorm.DB, email, username string) (bool, error) {
-	var existingUser concert.User
+	var existingUser models.User
 	err := db.Where("email = ? OR username = ?", email, username).First(&existingUser).Error
 	if err == nil {
 		return true, nil
@@ -134,8 +133,8 @@ func UserExists(db *gorm.DB, email, username string) (bool, error) {
 	return false, err
 }
 
-func FindUserByEmailOrUsername(db *gorm.DB, emailOrUsername string) (*concert.User, error) {
-	var user concert.User
+func FindUserByEmailOrUsername(db *gorm.DB, emailOrUsername string) (*models.User, error) {
+	var user models.User
 	err := db.Where("email = ? OR username = ?", emailOrUsername, emailOrUsername).First(&user).Error
 	if err != nil {
 		return nil, err
@@ -159,7 +158,7 @@ func UpdatePassword(db *gorm.DB, email, password string) error {
 	return nil
 }
 
-func InsertUser(db *gorm.DB, email, username, password, FirstName, LastName, role string) (*concert.User, error) {
+func InsertUser(db *gorm.DB, email, username, password, FirstName, LastName, role string) (*models.User, error) {
 	hashedPassword, err := HashPassword(password)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
@@ -167,7 +166,7 @@ func InsertUser(db *gorm.DB, email, username, password, FirstName, LastName, rol
 	if role == "" {
 		role = "user"
 	}
-	user := concert.User{
+	user := models.User{
 		Email:        email,
 		Username:     username,
 		PasswordHash: hashedPassword,
@@ -184,7 +183,7 @@ func InsertUser(db *gorm.DB, email, username, password, FirstName, LastName, rol
 }
 
 // Authenticate a user by email/username and password
-func AuthenticateUser(db *gorm.DB, emailOrUsername, password string) (*concert.User, error) {
+func AuthenticateUser(db *gorm.DB, emailOrUsername, password string) (*models.User, error) {
 	user, err := FindUserByEmailOrUsername(db, emailOrUsername)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {

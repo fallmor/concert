@@ -82,7 +82,6 @@ const ConcertDetailPage: React.FC = () => {
 
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-      {/* Back to concert page */}
       <button 
         onClick={() => navigate('/concerts')}
         style={{
@@ -117,7 +116,6 @@ const ConcertDetailPage: React.FC = () => {
         </div>
 
         <div style={{ padding: '40px' }}>
-          {/* Title */}
           <h1 style={{ 
             margin: '0 0 10px 0', 
             fontSize: '42px', 
@@ -149,7 +147,6 @@ const ConcertDetailPage: React.FC = () => {
             </span>
           </div>
 
-          {/* Informations */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',

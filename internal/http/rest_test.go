@@ -2,6 +2,7 @@ package http
 
 import (
 	"concert/internal/concert"
+	"concert/internal/models"
 	"concert/test/mocks"
 	"net/http"
 	"net/http/httptest"
@@ -14,8 +15,8 @@ import (
 
 func TestHandler_GetFan(t *testing.T) {
 	mockService := mocks.MockConcertService{
-		GetFanFunc: func(name string) ([]concert.Fan, error) {
-			return []concert.Fan{
+		GetFanFunc: func(name string) ([]models.Booking, error) {
+			return []models.Booking{
 				{Name: "Abdou", Price: 50},
 				{Name: "khady", Price: 100},
 				{Name: "Aminata", Price: 150},
@@ -35,8 +36,8 @@ func TestHandler_GetFan(t *testing.T) {
 
 func TestHandler_ListAllShow(t *testing.T) {
 	mockService := mocks.MockConcertService{
-		ListAllShowFunc: func() ([]concert.Show, error) {
-			return []concert.Show{
+		ListAllShowFunc: func() ([]models.Show, error) {
+			return []models.Show{
 				{Venue: "Paris", Date: time.Now()},
 				{Venue: "Marseille", Date: time.Now()},
 			}, nil
@@ -56,8 +57,8 @@ func TestHandler_ListAllShow(t *testing.T) {
 
 func TestHandler_ListAllFan(t *testing.T) {
 	mockService := mocks.MockConcertService{
-		ListAllFanFunc: func() ([]concert.Fan, error) {
-			return []concert.Fan{
+		ListAllFanFunc: func() ([]models.Booking, error) {
+			return []models.Booking{
 				{Name: "Abdou", Price: 50},
 				{Name: "khady", Price: 100},
 				{Name: "Aminata", Price: 150},
@@ -80,7 +81,7 @@ func TestHandler_ListAllFan(t *testing.T) {
 func TestHandler_SetArtist(t *testing.T) {
 	mockService := mocks.MockConcertService{
 		SetArtistFunc: func(artist concert.Artist) (concert.Artist, error) {
-			return concert.Artist{Name: "Drake", Genre: "Rock", ImageURL: "https://example.com/photo.jpg", AlbumURL: "https://example.com/album.jpg"}, nil
+			return models.Artist{Name: "Drake", Genre: "Rock", ImageURL: "https://example.com/photo.jpg", AlbumURL: "https://example.com/album.jpg"}, nil
 		},
 	}
 	handler, err := NewRouter(&mockService, nil)

@@ -65,8 +65,8 @@ func (h *Handler) ChiSetRoutes() {
 		// r.Post("/register", h.Register)
 		r.Post("/api/public/register", h.RegisterAPI)
 		r.Post("/api/public/login", h.LoginAPI)
-		r.Get("/forget-password", h.GetForgetPassword)
-		r.Post("/forget-password", h.ForgetPassword)
+		r.Get("/api/public/forget", h.GetForgetPassword)
+		r.Post("/api/public/forget", h.ForgetPassword)
 		r.Get("/api/public/shows", h.ListAllShow)
 		r.Get("/api/public/shows/{id}", h.GetShowPublic)
 		r.Get("/api/public/artists/{id}", h.GetArtistPublic)
@@ -97,11 +97,11 @@ func (h *Handler) ChiSetRoutes() {
 		r.Get("/profile", h.GetProfile)
 	})
 
-	h.Route.Group(func(r chi.Router) {
-		r.Use(NeedsAuth(h.Db))
-		r.Use(NeedsRole(h.Db, "moderator"))
-		h.ModeratorRoutes(r)
-	})
+	// h.Route.Group(func(r chi.Router) {
+	// 	r.Use(NeedsAuth(h.Db))
+	// 	r.Use(NeedsRole(h.Db, "moderator"))
+	// 	h.ModeratorRoutes(r)
+	// })
 
 	// Admin routes (
 	h.Route.Group(func(r chi.Router) {
@@ -109,12 +109,12 @@ func (h *Handler) ChiSetRoutes() {
 		r.Use(NeedsRole(h.Db, "admin"))
 		h.AdminRoutes(r)
 		// Also allow moderators' edit routes for admins
-		r.Get("/shows/{id}/edit", h.EditShow)
-		r.Get("/artists/{id}/edit", h.EditArtist)
-		r.Get("/fans/{id}/edit", h.EditFan)
-		r.Post("/shows/{id}/update", h.UpdateShow)
-		r.Post("/artists/{id}/update", h.UpdateArtist)
-		r.Post("/fans/{id}/update", h.UpdateFan)
+		// r.Get("/shows/{id}/edit", h.EditShow)
+		// r.Get("/artists/{id}/edit", h.EditArtist)
+		// r.Get("/fans/{id}/edit", h.EditFan)
+		// r.Post("/shows/{id}/update", h.UpdateShow)
+		// r.Post("/artists/{id}/update", h.UpdateArtist)
+		// r.Post("/fans/{id}/update", h.UpdateFan)
 	})
 }
 

@@ -29,7 +29,7 @@ const LoginPage: React.FC = () => {
       
       await login(formData.email, formData.password);
       
-      // Redirect after successful login
+      // redirect after login
       navigate('/');
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials.');
@@ -72,7 +72,7 @@ const LoginPage: React.FC = () => {
           marginBottom: '20px',
           fontSize: '14px'
         }}>
-          ❌ {error}
+          {error}
         </div>
       )}
 
