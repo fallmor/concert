@@ -28,6 +28,7 @@ A little concert booking just to practice golang .
    DB_PASSWORD=your_password
    DB_NAME=concert_db
    DB_SSLMODE=disable
+   RESEND_API: xxxx #from https://resend.com/emails
 
 2. Start a temporal server : https://docs.temporal.io/cli/server
 3. start the worker:

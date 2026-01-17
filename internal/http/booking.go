@@ -82,7 +82,7 @@ type CreateBookingRequest struct {
 }
 
 type BookingResponse struct {
-	ID          uint    `json:"id"`
+	ID          uint    `json:"ID"`
 	ShowID      uint    `json:"showId"`
 	ShowTitle   string  `json:"showTitle"`
 	TicketCount int     `json:"ticketCount"`
@@ -154,18 +154,25 @@ func (h *Handler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := BookingResponse{
-		ID:          booking.ID,
-		ShowID:      show.ID,
-		ShowTitle:   show.Title,
-		TicketCount: req.TicketCount,
-		TotalPrice:  totalPrice,
-		Status:      booking.Status,
-		BookingDate: booking.CreatedAt.Format("2006-01-02"),
+	var fullBooking models.Booking
+	if err := h.Db.Preload("Show.Artist").First(&fullBooking, booking.ID).Error; err != nil {
+		log.Printf("Error reloading booking: %v", err)
+		response := BookingResponse{
+			ID:          booking.ID,
+			ShowID:      show.ID,
+			ShowTitle:   show.Title,
+			TicketCount: req.TicketCount,
+			TotalPrice:  totalPrice,
+			Status:      booking.Status,
+			BookingDate: booking.CreatedAt.Format("2006-01-02"),
+		}
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(response)
+		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(fullBooking)
 }
 
 func (h *Handler) GetMyBookings(w http.ResponseWriter, r *http.Request) {
@@ -185,20 +192,7 @@ func (h *Handler) GetMyBookings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responses := make([]BookingResponse, len(bookings))
-	for i, booking := range bookings {
-		responses[i] = BookingResponse{
-			ID:          booking.ID,
-			ShowID:      booking.ShowID,
-			ShowTitle:   booking.Show.Title,
-			TicketCount: booking.TicketCount,
-			TotalPrice:  booking.TotalPrice,
-			Status:      booking.Status,
-			BookingDate: booking.CreatedAt.Format("2006-01-02"),
-		}
-	}
-
-	json.NewEncoder(w).Encode(responses)
+	json.NewEncoder(w).Encode(bookings)
 }
 
 func (h *Handler) CancelBooking(w http.ResponseWriter, r *http.Request) {

@@ -28,6 +28,7 @@ export interface Artist {
   genre: string;
   bio?: string;
   imageUrl?: string;
+  shows?: Concert[];
 }
 
 
@@ -39,17 +40,9 @@ export interface Booking {
   ticketCount: number;
   totalPrice: number;
   status: 'confirmed' | 'cancelled';
-  createdAt: string;
-  bookingDate: string;
-}
-export interface Artist {
-  id: number;
-  name: string;
-  genre: string;
-  bio?: string;
-  shows: Concert[]
-  imageUrl?: string;
-
+  CreatedAt: string; // GORM uses uppercase
+  UpdatedAt?: string;
+  DeletedAt?: string | null;
 }
 
 export interface LoginResponse {

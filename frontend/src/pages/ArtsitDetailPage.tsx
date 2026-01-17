@@ -2,14 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import type { Artist, Concert } from '../types';
 import { artistAPI } from '../services/api';
+import { Button, Card, Spin, Tag, Alert, Typography, Empty } from 'antd';
+import { CloseCircleOutlined, ArrowLeftOutlined, CalendarOutlined, EnvironmentOutlined } from '@ant-design/icons';
+
+const { Title } = Typography;
 
 const ArtistDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [artist, setArtist] = useState<Artist | null>(null);
   const [shows, setShows] = useState<Concert[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
+  const [alertVisible, setAlertVisible] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchArtist = async () => {
@@ -18,8 +23,10 @@ const ArtistDetailPage: React.FC = () => {
         const data = await artistAPI.getById(Number(id));
         setArtist(data);
         setShows(data.shows || []);
-      } catch (err) {
-        setError('Artist not found');
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Artist not found';
+        setError(errorMessage);
+        setAlertVisible(true);
         console.error('Error fetching artist:', err);
       } finally {
         setLoading(false);
@@ -33,207 +40,155 @@ const ArtistDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '100px' }}>
-        <h2>Loading artist...</h2>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Spin size="large" tip="Loading artist..." />
       </div>
     );
   }
 
   if (error || !artist) {
     return (
-      <div style={{ textAlign: 'center', padding: '100px' }}>
-        <h2>❌ {error || 'Artist not found'}</h2>
-        <button 
-          onClick={() => navigate('/artists')}
-          style={{
-            marginTop: '20px',
-            padding: '10px 20px',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer'
-          }}
-        >
-          Back to Artists
-        </button>
+      <div className="w-full flex justify-center px-4 py-12">
+        <div className="max-w-7xl w-full">
+          {error && alertVisible && (
+            <Alert
+              type="error"
+              showIcon
+              className="mb-6"
+              description={
+                <div className="flex items-center justify-between">
+                  <span>{error || 'Artist not found'}</span>
+                  <CloseCircleOutlined
+                    className="cursor-pointer hover:text-red-600 ml-4"
+                    onClick={() => {
+                      setAlertVisible(false);
+                      setError('');
+                    }}
+                  />
+                </div>
+              }
+            />
+          )}
+          <div className="text-center py-12">
+            <Title level={2} className="mb-6">❌ {error || 'Artist not found'}</Title>
+            <Button
+              type="primary"
+              size="large"
+              onClick={() => navigate('/artists')}
+              icon={<ArrowLeftOutlined />}
+            >
+              Back to Artists
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-      <button 
+    <div className="w-full flex justify-center px-4 py-12">
+      <div className="max-w-7xl w-full">
+        <Button
+          type="default"
         onClick={() => navigate('/artists')}
-        style={{
-          marginBottom: '20px',
-          padding: '8px 16px',
-          backgroundColor: '#6c757d',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer'
-        }}
+          icon={<ArrowLeftOutlined />}
+          className="mb-6"
       >
-        ← Back to Artists
-      </button>
+          Back to Artists
+        </Button>
 
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '15px',
-        overflow: 'hidden',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-      }}>
-        {/* Hero Section */}
-        <div style={{
-          height: '300px',
-          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative'
-        }}>
-          <div style={{
-            width: '200px',
-            height: '200px',
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255,255,255,0.95)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '100px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
-          }}>
-            🎤
-          </div>
+        <Card className="shadow-lg">
+          <div className="h-80 bg-gradient-to-r from-pink-400 to-red-500 flex items-center justify-center relative mb-8 rounded-t-lg">
+            {artist.imageUrl ? (
+              <img
+                src={artist.imageUrl}
+                alt={artist.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-48 h-48 rounded-full bg-white/95 flex items-center justify-center text-8xl shadow-2xl">
+                🎤
+              </div>
+            )}
         </div>
 
-        <div style={{ padding: '40px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-            <h1 style={{ 
-              margin: '0 0 15px 0', 
-              fontSize: '42px', 
-              color: '#333' 
-            }}>
+          <div className="p-8">
+            <div className="text-center mb-8">
+              <Title level={1} className="mb-4">
               {artist.name}
-            </h1>
-
+              </Title>
             {artist.genre && (
-              <span style={{
-                display: 'inline-block',
-                padding: '8px 20px',
-                backgroundColor: '#e7f3ff',
-                color: '#007bff',
-                borderRadius: '20px',
-                fontSize: '16px',
-                fontWeight: 'bold'
-              }}>
+                <Tag color="blue" className="text-base px-4 py-1">
                 {artist.genre}
-              </span>
+                </Tag>
             )}
           </div>
 
           {artist.bio && (
-            <div style={{ 
-              marginBottom: '40px',
-              padding: '30px',
-              backgroundColor: '#f8f9fa',
-              borderRadius: '10px'
-            }}>
-              <h2 style={{ fontSize: '24px', marginBottom: '15px' }}>About</h2>
-              <p style={{ 
-                fontSize: '16px', 
-                lineHeight: '1.8', 
-                color: '#555',
-                margin: 0
-              }}>
+              <Card className="mb-8 bg-gray-50">
+                <Title level={3} className="mb-4">About</Title>
+                <p className="text-base text-gray-600 leading-relaxed mb-0">
                 {artist.bio}
               </p>
-            </div>
+              </Card>
           )}
 
           <div>
-            <h2 style={{ fontSize: '28px', marginBottom: '20px' }}>
+              <Title level={2} className="mb-6">
               Upcoming Performances ({shows.length})
-            </h2>
+              </Title>
 
             {shows.length === 0 ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '40px',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '10px',
-                color: '#666'
-              }}>
-                <p>No upcoming performances scheduled</p>
-              </div>
+                <Empty
+                  description="No upcoming performances scheduled"
+                  className="py-12"
+                />
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                {shows.map(show => (
+                  <div className="flex flex-col gap-4">
+                    {shows.map((show: Concert) => (
                   <Link
                     key={show.ID}
                     to={`/concerts/${show.ID}`}
-                    style={{ textDecoration: 'none', color: 'inherit' }}
+                      className="no-underline"
                   >
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '20px',
-                      backgroundColor: '#f8f9fa',
-                      borderRadius: '8px',
-                      border: '2px solid transparent',
-                      transition: 'all 0.3s',
-                      cursor: 'pointer'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = '#007bff';
-                      e.currentTarget.style.backgroundColor = '#e7f3ff';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = 'transparent';
-                      e.currentTarget.style.backgroundColor = '#f8f9fa';
-                    }}
+                      <Card
+                        hoverable
+                        className="border-2 border-transparent hover:border-blue-500 hover:bg-blue-50 transition-all"
                     >
-                      <div>
-                        <h3 style={{ margin: '0 0 8px 0', fontSize: '20px' }}>
-                          {show.title}
-                        </h3>
-                        <p style={{ margin: '5px 0', color: '#666', fontSize: '14px' }}>
-                          📍 {show.venue}
-                        </p>
-                        <p style={{ margin: '5px 0', color: '#666', fontSize: '14px' }}>
-                          📅 {new Date(show.date).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </p>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ 
-                          fontSize: '24px', 
-                          fontWeight: 'bold', 
-                          color: '#007bff' 
-                        }}>
-                          ${show.price.toFixed(2)}
-                        </div>
-                        <div style={{ 
-                          fontSize: '12px', 
-                          color: show.availableSeats < 20 ? '#dc3545' : '#28a745',
-                          marginTop: '5px'
-                        }}>
-                          {show.availableSeats} seats left
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h3 className="text-xl font-semibold mb-2">{show.title}</h3>
+                            <p className="text-gray-600 text-sm mb-1">
+                              <EnvironmentOutlined className="mr-2" />
+                              {show.venue}
+                            </p>
+                            <p className="text-gray-600 text-sm">
+                              <CalendarOutlined className="mr-2" />
+                              {new Date(show.date).toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-blue-600 mb-1">
+                              ${show.price.toFixed(2)}
+                            </div>
+                            <Tag color={show.availableSeats < 20 ? 'red' : 'green'}>
+                              {show.availableSeats} seats left
+                            </Tag>
                         </div>
                       </div>
-                    </div>
+                      </Card>
                   </Link>
                 ))}
               </div>
             )}
           </div>
         </div>
+        </Card>
       </div>
     </div>
   );

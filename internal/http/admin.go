@@ -426,7 +426,7 @@ func (h *Handler) GetStats(w http.ResponseWriter, r *http.Request) {
 
 	h.Db.Model(&models.Show{}).Count(&stats.TotalShows)
 	h.Db.Model(&models.Artist{}).Count(&stats.TotalArtists)
-	h.Db.Model(&models.Booking{}).Where("status = ?", "confirmed").Count(&stats.TotalBookings)
+	h.Db.Model(&models.Booking{}).Count(&stats.TotalBookings)
 	h.Db.Model(&models.User{}).Count(&stats.TotalUsers)
 
 	h.Db.Model(&models.Booking{}).

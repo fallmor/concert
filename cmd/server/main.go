@@ -26,7 +26,7 @@ func Run() error {
 	concertService := concert.NewConcert(db)
 	handler, err := httpTransport.NewRouter(concertService, db)
 	if err != nil {
-		log.Printf("Could not initialize the handler %w", err)
+		log.Printf("Could not initialize the handler: %v", err)
 	}
 	defer handler.Close()
 	handler.ChiSetRoutes()

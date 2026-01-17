@@ -1,4 +1,3 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "./components/header";
 import Footer from "./components/footer";
@@ -9,23 +8,20 @@ import ArtistsPage from "./pages/ArtistsPage";
 import ArtistDetailPage from "./pages/ArtsitDetailPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import BookingPage from "./pages/BookingPage";
 import MyBookingsPage from "./pages/BookingPage";
+import CreateBookingPage from "./pages/CreateBookingPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminShows from "./pages/AdminShows";
+import AdminBookings from "./pages/AdminBookings";
+import AdminArtists from "./pages/AdminArtists";
+import ForgetPass from "./pages/ForgetPass";
 
 function App() {
 
   return (
     <Router>
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          backgroundColor: "#f5f5f5",
-        }}
-      >
+      {/* Using Tailwind for layout instead of inline styles */}
+      <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
 
         <main style={{ flex: 1, padding: "40px 20px" }}>
@@ -37,10 +33,13 @@ function App() {
             <Route path="/artists/:id" element={<ArtistDetailPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forget" element={<ForgetPass />} />
             <Route path="/my-bookings" element={<MyBookingsPage />} />
-            <Route path="/book/:id" element={<BookingPage />} />
+            <Route path="/book/:id" element={<CreateBookingPage />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/shows" element={<AdminShows />} />
+            <Route path="/admin/bookings" element={<AdminBookings />} />
+            <Route path="/admin/artists" element={<AdminArtists />} />
           </Routes>
         </main>
 

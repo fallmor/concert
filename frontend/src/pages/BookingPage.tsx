@@ -3,6 +3,10 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import type { Booking } from '../types';
 import { bookingAPI } from '../services/api';
+import { Typography, Spin, Alert, Card, Tag, Empty, Button, Modal } from 'antd';
+import { CloseCircleOutlined, CheckCircleOutlined, CalendarOutlined, ShoppingOutlined } from '@ant-design/icons';
+
+const { Title } = Typography;
 
 const MyBookingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -10,9 +14,10 @@ const MyBookingsPage: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
   
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
+  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [alertVisible, setAlertVisible] = useState<boolean>(true);
 
   useEffect(() => {
     if (isLoading) return;
@@ -31,8 +36,10 @@ const MyBookingsPage: React.FC = () => {
       try {
         const data = await bookingAPI.getMyBookings();
         setBookings(data);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load bookings');
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load bookings';
+        setError(errorMessage);
+        setAlertVisible(true);
       } finally {
         setLoading(false);
       }
@@ -42,112 +49,123 @@ const MyBookingsPage: React.FC = () => {
   }, [isAuthenticated, isLoading, navigate, location.state]);
 
   const handleCancel = async (bookingId: number) => {
-    if (!confirm('Are you sure you want to cancel this booking?')) {
-      return;
-    }
+    Modal.confirm({
+      title: 'Cancel Booking',
+      content: 'Are you sure you want to cancel this booking?',
+      okText: 'Yes, Cancel',
+      okType: 'danger',
+      cancelText: 'No',
+      onOk: async () => {
+        try {
+          await bookingAPI.cancel(bookingId);
 
-    try {
-      await bookingAPI.cancel(bookingId);
-      
-      setBookings(prev => 
-        prev.map(b => 
-            b.ID === bookingId 
-            ? { ...b, status: 'cancelled' as const }
-            : b
-        )
-      );
-      
-      setSuccessMessage('Booking cancelled successfully');
-      setTimeout(() => setSuccessMessage(''), 5000);
-    } catch (err: any) {
-      alert(err.message || 'Failed to cancel booking');
-    }
+          setBookings(prev =>
+            prev.map(b =>
+              b.ID === bookingId
+                ? { ...b, status: 'cancelled' as const }
+                : b
+            )
+          );
+
+          setSuccessMessage('Booking cancelled successfully');
+          setAlertVisible(true);
+          setTimeout(() => {
+            setSuccessMessage('');
+            setAlertVisible(false);
+          }, 5000);
+        } catch (err: unknown) {
+          const errorMessage = err instanceof Error ? err.message : 'Failed to cancel booking';
+          setError(errorMessage);
+          setAlertVisible(true);
+        }
+      }
+    });
   };
 
-  if (isLoading) {
+  if (isLoading || loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '100px' }}>
-        <h2>Loading...</h2>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div style={{ textAlign: 'center', padding: '100px' }}>
-        <h2>Loading your bookings...</h2>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Spin size="large" tip={isLoading ? 'Loading...' : 'Loading your bookings...'} />
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '36px', marginBottom: '30px' }}>
-        My Bookings
-      </h1>
+    <div className="w-full flex justify-center px-4 py-12">
+      <div className="max-w-7xl w-full">
+        <Title level={1} className="mb-8">
+          My Bookings
+        </Title>
 
-      {successMessage && (
-        <div style={{
-          backgroundColor: '#d4edda',
-          color: '#155724',
-          padding: '15px',
-          borderRadius: '8px',
-          marginBottom: '20px',
-          border: '1px solid #c3e6cb'
-        }}>
-          {successMessage}
-        </div>
+        {successMessage && alertVisible && (
+          <Alert
+            type="success"
+            showIcon
+            icon={<CheckCircleOutlined />}
+            className="mb-6"
+            description={
+              <div className="flex items-center justify-between">
+                <span>{successMessage}</span>
+                <CloseCircleOutlined
+                  className="cursor-pointer hover:text-green-600 ml-4"
+                  onClick={() => {
+                    setAlertVisible(false);
+                    setSuccessMessage('');
+                  }}
+                />
+              </div>
+          }
+          />
       )}
 
-      {error && (
-        <div style={{
-          backgroundColor: '#f8d7da',
-          color: '#721c24',
-          padding: '15px',
-          borderRadius: '8px',
-          marginBottom: '20px'
-        }}>
-          {error}
-        </div>
+        {error && alertVisible && (
+          <Alert
+            type="error"
+            showIcon
+            className="mb-6"
+            description={
+              <div className="flex items-center justify-between">
+                <span>{error}</span>
+                <CloseCircleOutlined
+                  className="cursor-pointer hover:text-red-600 ml-4"
+                  onClick={() => {
+                    setAlertVisible(false);
+                    setError('');
+                  }}
+                />
+              </div>
+          }
+          />
       )}
 
       {bookings.length === 0 ? (
-        <div style={{
-          textAlign: 'center',
-          padding: '60px',
-          backgroundColor: 'white',
-          borderRadius: '15px',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-        }}>
-          <p style={{ fontSize: '18px', color: '#666', marginBottom: '20px' }}>
-            You haven't booked any concerts yet.
-          </p>
-          <Link
-            to="/concerts"
-            style={{
-              display: 'inline-block',
-              padding: '12px 30px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '8px',
-              fontWeight: 'bold'
-            }}
-          >
-            Browse Concerts
-          </Link>
-        </div>
+          <Empty
+            description={
+              <div>
+                <p className="text-lg text-gray-600 mb-4">
+                  You haven't booked any concerts yet.
+                </p>
+                <Link to="/concerts">
+                  <Button type="primary" size="large">
+                    Browse Concerts
+                  </Button>
+                </Link>
+              </div>
+          }
+            className="py-12"
+          />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {bookings.map(booking => (
+            <div className="flex flex-col gap-6">
+              {bookings.map((booking: Booking) => (
             <BookingCard
-                  key={booking.ID}
+                key={booking.ID}
               booking={booking}
               onCancel={handleCancel}
             />
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 };
@@ -161,90 +179,54 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onCancel }) => {
   const isCancelled = booking.status === 'cancelled';
 
   return (
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '15px',
-      padding: '25px',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      opacity: isCancelled ? 0.6 : 1,
-      border: isCancelled ? '2px solid #dc3545' : 'none'
-    }}>
-      <div style={{ flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-          <h3 style={{ margin: 0, fontSize: '22px' }}>
-            {booking.show?.title}
-          </h3>
-          {isCancelled && (
-            <span style={{
-              backgroundColor: '#dc3545',
-              color: 'white',
-              padding: '4px 12px',
-              borderRadius: '12px',
-              fontSize: '12px',
-              fontWeight: 'bold'
-            }}>
-              CANCELLED
-            </span>
+    <Card
+      className={`transition-all ${isCancelled ? 'opacity-60 border-2 border-red-500' : ''}`}
+    >
+      <div className="flex justify-between items-center flex-wrap gap-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
+            <Title level={3} className="mb-0">
+              {booking.show?.title || 'Concert'}
+            </Title>
+            {isCancelled && (
+              <Tag color="red" className="text-xs font-bold">
+                CANCELLED
+              </Tag>
+            )}
+          </div>
+
+          <div className="text-gray-600 space-y-2">
+            <p className="mb-0">
+              <ShoppingOutlined className="mr-2" />
+              {booking.ticketCount} ticket{booking.ticketCount !== 1 ? 's' : ''}
+            </p>
+            <p className="mb-0">
+              <CalendarOutlined className="mr-2" />
+              Booked on: {new Date(booking.CreatedAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-end gap-4">
+          <div className={`text-3xl font-bold ${isCancelled ? 'text-gray-400' : 'text-blue-600'}`}>
+            €{booking.totalPrice.toFixed(2)}
+          </div>
+
+          {!isCancelled && (
+            <Button
+              danger
+              onClick={() => onCancel(booking.ID)}
+            >
+              Cancel Booking
+            </Button>
           )}
         </div>
-
-        <div style={{ color: '#666', fontSize: '14px' }}>
-          <p style={{ margin: '5px 0' }}>
-            🎟️ {booking.ticketCount} ticket{booking.ticketCount !== 1 ? 's' : ''}
-          </p>
-          <p style={{ margin: '5px 0' }}>
-            📅 Booked on: {new Date(booking.bookingDate).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
-          </p>
-        </div>
       </div>
-
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-end',
-        gap: '15px'
-      }}>
-        <div style={{
-          fontSize: '28px',
-          fontWeight: 'bold',
-          color: isCancelled ? '#999' : '#007bff'
-        }}>
-                  €{booking.totalPrice.toFixed(2)}
-        </div>
-
-        {!isCancelled && (
-          <button
-                      onClick={() => onCancel(booking.ID)}
-            style={{
-              padding: '8px 20px',
-              backgroundColor: '#dc3545',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              transition: 'background-color 0.3s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#c82333';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#dc3545';
-            }}
-          >
-            Cancel Booking
-          </button>
-        )}
-      </div>
-    </div>
+    </Card>
   );
 };
 

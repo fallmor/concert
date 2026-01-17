@@ -1,4 +1,4 @@
-import type { Concert, Artist, User, LoginResponse, Booking } from "../types";
+import type { Concert, Artist, User, Booking } from "../types";
 
 const API_BASE_URL = "/api";
 
@@ -16,10 +16,44 @@ async function fetchAPI<T>(
   });
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.statusText}`);
+    // Try to read the error message from the response body
+    let errorMessage = response.statusText;
+    try {
+      const errorData = await response.text();
+      if (errorData) {
+        // Try to parse as JSON first
+        try {
+          const jsonError = JSON.parse(errorData);
+          errorMessage = jsonError.error || jsonError.message || errorData;
+        } catch {
+          // If not JSON, use the text as is
+          errorMessage = errorData;
+        }
+      }
+    } catch {
+      // If we can't read the body, use statusText
+      errorMessage = response.statusText;
+    }
+    throw new Error(errorMessage || `API Error: ${response.statusText}`);
   }
 
-  return response.json();
+
+  const contentType = response.headers.get("content-type");
+  const text = await response.text();
+
+  if (!text || text.trim() === '') {
+    return '' as T;
+  }
+
+  if (contentType && contentType.includes("application/json")) {
+    try {
+      return JSON.parse(text) as T;
+    } catch (e) {
+      return text as T;
+    }
+  }
+
+  return text as T;
 }
 
 export const concertAPI = {

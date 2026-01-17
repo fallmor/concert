@@ -9,5 +9,5 @@ type Artist struct {
 	Bio      string `json:"bio,omitempty"`
 	ImageURL string `json:"imageUrl,omitempty"`
 	AlbumURL string `json:"albumUrl,omitempty"`
-	Shows    []Show `gorm:"foreignKey:ArtistID" json:"-"`
+	Shows    []Show `gorm:"foreignKey:ArtistID" json:"shows,omitempty"`
 }

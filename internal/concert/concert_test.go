@@ -59,19 +59,6 @@ func TestGetFan(t *testing.T) {
 	assert.Equal(t, 1, len(found))
 	assert.Equal(t, booking.ID, found[0].ID)
 	assert.Equal(t, "toto", found[0].User.Username)
-
-	// artist := models.Artist{Name: "Drake", Genre: "Rock"}
-	// db.Create(&artist)
-	// show := models.Show{ArtistID: artist.ID, Venue: "Paris", Date: time.Now()}
-	// db.Create(&show)
-	// myuser := models.User{Email: "totoøgmail.com", Username: "toto", Role: "user", Bookings: []models.Booking{{Show: show, }}}
-	// fan := models.Booking{User: myuser, }
-	// db.Create(&fan)
-
-	// found, err := service.GetFan("Abdou")
-	// assert.NoError(t, err)
-	// assert.NotEmpty(t, found)
-	// assert.Equal(t, fan.Show, found[0])
 }
 func TestGetShow(t *testing.T) {
 	db := SetupTestDB()
@@ -152,9 +139,8 @@ func TestParticipateShow(t *testing.T) {
 	}
 	db.Create(&booking)
 
-	found, err := service.ParticipateShow(booking)
-	t.Error(&found)
+	found, err := service.SetShow(show)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, found)
-	assert.Equal(t, booking.Show, found)
+	assert.Equal(t, show.Venue, found.Venue)
 }

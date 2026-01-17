@@ -1,404 +1,192 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Form, Button, Input, Alert } from 'antd';
+import { CloseCircleOutlined } from '@ant-design/icons';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
+  const [form] = Form.useForm();
   
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    firstName: '',
-    lastName: '',
-    password: '',
-    confirmPassword: ''
-  });
-  
-  const [errors, setErrors] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    general: ''
-  });
-  
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(true);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Clear error when user types
-    setErrors(prev => ({ ...prev, [name]: '', general: '' }));
-  };
-
-  const validate = (): boolean => {
-    const newErrors = {
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-      general: ''
-    };
-    
-    let isValid = true;
-
-    if (formData.username.length < 3) {
-      newErrors.username = 'Username must be at least 3 characters';
-      isValid = false;
-    }
-
-    if (!formData.email.includes('@')) {
-      newErrors.email = 'Please enter a valid email';
-      isValid = false;
-    }
-
-    if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-      isValid = false;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validate()) return;
-
+  const handleSubmit = async (values: {
+    username: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    password: string;
+    confirmPassword: string;
+  }) => {
     try {
       setLoading(true);
-      await register(formData.username, formData.email, formData.firstName, formData.lastName, formData.password);
+      setError('');
+      setAlertVisible(true);
+
+      await register(
+        values.username,
+        values.email,
+        values.firstName,
+        values.lastName,
+        values.password
+      );
 
       navigate('/');
-    } catch (error: any) {
-      setErrors(prev => ({
-        ...prev,
-        general: error.message || 'Registration failed. Email might already be in use.'
-      }));
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{
-      maxWidth: '450px',
-      margin: '60px auto',
-      backgroundColor: 'white',
-      padding: '40px',
-      borderRadius: '15px',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-    }}>
-      <h1 style={{ 
-        textAlign: 'center', 
-        marginBottom: '10px',
-        fontSize: '32px',
-        color: '#333'
-      }}>
-        Create Account
-      </h1>
-      <p style={{ 
-        textAlign: 'center', 
-        color: '#666', 
-        marginBottom: '30px' 
-      }}>
-        Join us to book amazing concerts
-      </p>
+    <div className="min-h-[calc(100vh-500px)] flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-xl p-10 bg-white rounded-lg shadow-md">
+        <h1 className="text-5xl font-bold text-center mb-6">Create Account</h1>
+        <p className="text-gray-600 text-center mb-8 text-lg">
+          Register to book your favorite concerts
+        </p>
 
-      {errors.general && (
-        <div style={{
-          backgroundColor: '#f8d7da',
-          color: '#721c24',
-          padding: '12px',
-          borderRadius: '5px',
-          marginBottom: '20px',
-          fontSize: '14px'
-        }}>
-           {errors.general}
-        </div>
-      )}
+        {error && alertVisible && (
+          <Alert
+            type="error"
+            showIcon
+            className="mb-6"
+            description={
+              <div className="flex items-center justify-between">
+                <span>{error}</span>
+                <CloseCircleOutlined
+                  className="cursor-pointer hover:text-red-600 ml-4"
+                  onClick={() => {
+                    setAlertVisible(false);
+                    setError('');
+                  }}
+                />
+              </div>
+            }
+          />
+        )}
 
-      <form onSubmit={handleSubmit}>
-
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ 
-            display: 'block', 
-            marginBottom: '8px', 
-            fontWeight: 'bold',
-            fontSize: '14px',
-            color: '#333'
-          }}>
-            Username
-          </label>
-          <input
-            type="text"
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          className="space-y-4"
+          size="large"
+        >
+          <Form.Item
             name="username"
-            value={formData.username}
-            onChange={handleChange}
-            required
-            style={{
-              width: '100%',
-              padding: '12px',
-              fontSize: '16px',
-              border: errors.username ? '2px solid #dc3545' : '1px solid #ddd',
-              borderRadius: '8px',
-              outline: 'none',
-              transition: 'border-color 0.3s'
-            }}
-            onFocus={(e) => {
-              if (!errors.username) {
-                e.target.style.borderColor = '#007bff';
-              }
-            }}
-            onBlur={(e) => {
-              if (!errors.username) {
-                e.target.style.borderColor = '#ddd';
-              }
-            }}
-          />
-          {errors.username && (
-            <p style={{ color: '#dc3545', fontSize: '13px', margin: '5px 0 0 0' }}>
-              {errors.username}
-            </p>
-          )}
-        </div>
+            label={<span className="text-base font-medium">Username</span>}
+            rules={[
+              { required: true, message: 'Please enter your username' },
+              { min: 3, message: 'Username must be at least 3 characters' }
+            ]}
+          >
+            <Input
+              placeholder="Enter your username"
+              className="py-3"
+            />
+          </Form.Item>
 
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ 
-            display: 'block', 
-            marginBottom: '8px', 
-            fontWeight: 'bold',
-            fontSize: '14px',
-            color: '#333'
-          }}>
-            Email
-          </label>
-          <input
-            type="email"
+          <Form.Item
             name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            style={{
-              width: '100%',
-              padding: '12px',
-              fontSize: '16px',
-              border: errors.email ? '2px solid #dc3545' : '1px solid #ddd',
-              borderRadius: '8px',
-              outline: 'none'
-            }}
-            onFocus={(e) => {
-              if (!errors.email) {
-                e.target.style.borderColor = '#007bff';
-              }
-            }}
-            onBlur={(e) => {
-              if (!errors.email) {
-                e.target.style.borderColor = '#ddd';
-              }
-            }}
-          />
-          {errors.email && (
-            <p style={{ color: '#dc3545', fontSize: '13px', margin: '5px 0 0 0' }}>
-              {errors.email}
-            </p>
-          )}
-        </div>
+            label={<span className="text-base font-medium">Email</span>}
+            rules={[
+              { required: true, message: 'Please enter your email' },
+              { type: 'email', message: 'Please enter a valid email' }
+            ]}
+          >
+            <Input
+              type="email"
+              placeholder="Enter your email"
+              className="py-3"
+            />
+          </Form.Item>
 
-        {/* FirstNamr */}
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ 
-            display: 'block', 
-            marginBottom: '8px', 
-            fontWeight: 'bold',
-            fontSize: '14px',
-            color: '#333'
-          }}>
-            First Name
-          </label>
-          <input
-            type="text"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            required
-            style={{
-              width: '100%',
-              padding: '12px',
-              fontSize: '16px',
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              outline: 'none'
-            }}
-          />
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Form.Item
+              name="firstName"
+              label={<span className="text-base font-medium">First Name</span>}
+              rules={[{ required: true, message: 'Please enter your first name' }]}
+            >
+              <Input
+                placeholder="First name"
+                className="py-3"
+              />
+            </Form.Item>
 
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ 
-            display: 'block', 
-            marginBottom: '8px', 
-            fontWeight: 'bold',
-            fontSize: '14px',
-            color: '#333'
-          }}>
-            Last Name
-          </label>
-          <input
-            type="text"
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            required
-            style={{
-              width: '100%',
-              padding: '12px',
-              fontSize: '16px',
-              border:'1px solid #ddd',
-              borderRadius: '8px',
-              outline: 'none'
-            }}
-          />
-        </div>
+            <Form.Item
+              name="lastName"
+              label={<span className="text-base font-medium">Last Name</span>}
+              rules={[{ required: true, message: 'Please enter your last name' }]}
+            >
+              <Input
+                placeholder="Last name"
+                className="py-3"
+              />
+            </Form.Item>
+          </div>
 
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ 
-            display: 'block', 
-            marginBottom: '8px', 
-            fontWeight: 'bold',
-            fontSize: '14px',
-            color: '#333'
-          }}>
-            Password
-          </label>
-          <input
-            type="password"
+          <Form.Item
             name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            style={{
-              width: '100%',
-              padding: '12px',
-              fontSize: '16px',
-              border: errors.password ? '2px solid #dc3545' : '1px solid #ddd',
-              borderRadius: '8px',
-              outline: 'none'
-            }}
-            onFocus={(e) => {
-              if (!errors.password) {
-                e.target.style.borderColor = '#007bff';
-              }
-            }}
-            onBlur={(e) => {
-              if (!errors.password) {
-                e.target.style.borderColor = '#ddd';
-              }
-            }}
-          />
-          {errors.password && (
-            <p style={{ color: '#dc3545', fontSize: '13px', margin: '5px 0 0 0' }}>
-              {errors.password}
-            </p>
-          )}
-        </div>
+            label={<span className="text-base font-medium">Password</span>}
+            rules={[
+              { required: true, message: 'Please enter your password' },
+              { min: 6, message: 'Password must be at least 6 characters' }
+            ]}
+          >
+            <Input.Password
+              placeholder="Enter your password"
+              className="py-3"
+            />
+          </Form.Item>
 
-        <div style={{ marginBottom: '25px' }}>
-          <label style={{ 
-            display: 'block', 
-            marginBottom: '8px', 
-            fontWeight: 'bold',
-            fontSize: '14px',
-            color: '#333'
-          }}>
-            Confirm Password
-          </label>
-          <input
-            type="password"
+          <Form.Item
             name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            style={{
-              width: '100%',
-              padding: '12px',
-              fontSize: '16px',
-              border: errors.confirmPassword ? '2px solid #dc3545' : '1px solid #ddd',
-              borderRadius: '8px',
-              outline: 'none'
-            }}
-            onFocus={(e) => {
-              if (!errors.confirmPassword) {
-                e.target.style.borderColor = '#007bff';
-              }
-            }}
-            onBlur={(e) => {
-              if (!errors.confirmPassword) {
-                e.target.style.borderColor = '#ddd';
-              }
-            }}
-          />
-          {errors.confirmPassword && (
-            <p style={{ color: '#dc3545', fontSize: '13px', margin: '5px 0 0 0' }}>
-              {errors.confirmPassword}
-            </p>
-          )}
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: '100%',
-            padding: '14px',
-            backgroundColor: loading ? '#ccc' : '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '18px',
-            fontWeight: 'bold',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            transition: 'background-color 0.3s'
-          }}
-          onMouseEnter={(e) => {
-            if (!loading) {
-              e.currentTarget.style.backgroundColor = '#0056b3';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!loading) {
-              e.currentTarget.style.backgroundColor = '#007bff';
-            }
-          }}
-        >
-          {loading ? 'Creating Account...' : 'Register'}
-        </button>
-      </form>
+            label={<span className="text-base font-medium">Confirm Password</span>}
+            dependencies={['password']}
+            rules={[
+              { required: true, message: 'Please confirm your password' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('password') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('Password does not match!'));
+                },
+              }),
+            ]}
+          >
+            <Input.Password
+              placeholder="Confirm your password"
+              className="py-3"
+            />
+          </Form.Item>
 
-      <p style={{ 
-        textAlign: 'center', 
-        marginTop: '25px',
-        color: '#666',
-        fontSize: '14px'
-      }}>
-        Already have an account?{' '}
-        <Link 
-          to="/login" 
-          style={{ 
-            color: '#007bff', 
-            textDecoration: 'none',
-            fontWeight: 'bold'
-          }}
-        >
-          Login here
-        </Link>
-      </p>
+          <Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              block
+              size="large"
+              className="h-12 text-lg font-semibold"
+            >
+              {loading ? 'Creating Account...' : 'Register'}
+            </Button>
+          </Form.Item>
+        </Form>
+
+        <p className="text-center mt-8 text-gray-600 text-base">
+          Already have an account?{' '}
+          <Link to="/login" className="text-blue-600 hover:text-blue-800 font-semibold">
+            Login here
+          </Link>
+        </p>
+      </div>
     </div>
   );
 };

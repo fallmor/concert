@@ -6,24 +6,28 @@ import (
 )
 
 type MockConcertService struct {
-	GetFanFunc          func(name string) ([]models.Booking, error)
-	GetShowFunc         func(artistName string) ([]models.Show, error)
-	SetShowFunc         func(show models.Show) (models.Show, error)
-	SetArtistFunc       func(artist models.Artist) (models.Artist, error)
-	ParticipateShowFunc func(fan models.Booking) (models.Show, error)
-	ListAllShowFunc     func() ([]models.Show, error)
-	ListAllFanFunc      func() ([]models.Booking, error)
-	ListAllArtistsFunc  func() ([]models.Artist, error)
-	GetArtistByIDFunc   func(id uint) (models.Artist, error)
-	GetShowByIDFunc     func(id uint) (models.Show, error)
-	UploadImageFunc     func(file multipart.File, handler *multipart.FileHeader, folder string) (string, error)
-	GetAllUsersFunc     func() ([]models.User, error)
-	DeleteShowFunc      func(id uint) error
-	DeleteArtistFunc    func(id uint) error
-	DeleteFanFunc       func(id uint) error
-	UpdateShowFunc      func(show models.Show) (models.Show, error)
-	UpdateArtistFunc    func(artist models.Artist) (models.Artist, error)
-	UpdateFanFunc       func(fan models.Booking) (models.Booking, error)
+	GetFanFunc            func(name string) ([]models.Booking, error)
+	GetShowFunc           func(artistName string) ([]models.Show, error)
+	SetShowFunc           func(show models.Show) (models.Show, error)
+	SetArtistFunc         func(artist models.Artist) (models.Artist, error)
+	ParticipateShowFunc   func(fan models.Booking) (models.Show, error)
+	ListAllShowFunc       func() ([]models.Show, error)
+	ListAllFanFunc        func() ([]models.Booking, error)
+	ListAllArtistsFunc    func() ([]models.Artist, error)
+	GetArtistByIDFunc     func(id uint) (models.Artist, error)
+	GetShowByIDFunc       func(id uint) (models.Show, error)
+	UploadImageFunc       func(file multipart.File, handler *multipart.FileHeader, folder string) (string, error)
+	GetAllUsersFunc       func() ([]models.User, error)
+	DeleteShowFunc        func(id uint) error
+	DeleteArtistFunc      func(id uint) error
+	DeleteFanFunc         func(id uint) error
+	UpdateShowFunc        func(show models.Show) (models.Show, error)
+	UpdateArtistFunc      func(artist models.Artist) (models.Artist, error)
+	UpdateFanFunc         func(fan models.Booking) (models.Booking, error)
+	CountConfirmSeatsFunc func(id uint) int64
+	GetMyBookingsFunc     func(user models.User) ([]models.Booking, error)
+	GetAllBookingsFunc    func() ([]models.Booking, error)
+	GetBookingByIdFunc    func(id uint) (models.Booking, error)
 }
 
 func (m *MockConcertService) GetFan(name string) ([]models.Booking, error) {
@@ -91,4 +95,20 @@ func (m *MockConcertService) UpdateArtist(artist models.Artist) (models.Artist, 
 
 func (m *MockConcertService) UpdateFan(fan models.Booking) (models.Booking, error) {
 	return m.UpdateFanFunc(fan)
+}
+
+func (m *MockConcertService) CountConfirmSeats(id uint) int64 {
+	return m.CountConfirmSeatsFunc(id)
+}
+
+func (m *MockConcertService) GetMyBookings(user models.User) ([]models.Booking, error) {
+	return m.GetMyBookingsFunc(user)
+}
+
+func (m *MockConcertService) GetAllBookings() ([]models.Booking, error) {
+	return m.GetAllBookingsFunc()
+}
+
+func (m *MockConcertService) GetBookingById(id uint) (models.Booking, error) {
+	return m.GetBookingByIdFunc(id)
 }

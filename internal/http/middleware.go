@@ -82,6 +82,14 @@ func NeedsAuth(db *gorm.DB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !Authenticated(r) {
+				// Check if this is an API route - return JSON error instead of redirect
+				if strings.HasPrefix(r.URL.Path, "/api/") {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusUnauthorized)
+					w.Write([]byte(`{"error": "Unauthorized"}`))
+					return
+				}
+				// For non-API routes (HTML pages), redirect to login
 				http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 				return
 			}

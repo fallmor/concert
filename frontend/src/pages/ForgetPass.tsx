@@ -1,41 +1,38 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { authAPI } from "../services/api";
 import { Form, Button, Input, Alert } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
 
-const LoginPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { login } = useAuth();
+const ForgetPass: React.FC = () => {
   const [form] = Form.useForm();
-  
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [alertVisible, setAlertVisible] = useState(true);
 
-  const handleSubmit = async (values: { email: string; password: string }) => {
+  const handleSubmit = async (values: { email: string }) => {
     try {
       setLoading(true);
-      setError('');
-      
-      await login(values.email, values.password);
-      
-      // redirect after login
-      navigate('/');
-    } catch (err: any) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      setError("");
+      setSuccess(false);
       setAlertVisible(true);
+      
+      await authAPI.forget(values.email);
+      setSuccess(true);
+    } catch (err: any) {
+      setError(err.message || 'Failed to send password reset email. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-500px)] flex items-center justify-center">
+    <div className="min-h-[calc(100vh-500px)] flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-xl p-10 bg-white rounded-lg shadow-md">
-        <h1 className="text-5xl font-bold text-center mb-6">Welcome </h1>
+        <h1 className="text-5xl font-bold text-center mb-6">Forget Password</h1>
         <p className="text-gray-600 text-center mb-8 text-lg">
-          Login to book a concert
+          Request a new password
         </p>
 
         {error && alertVisible && (
@@ -46,11 +43,31 @@ const LoginPage: React.FC = () => {
             description={
               <div className="flex items-center justify-between">
                 <span>{error}</span>
-                <CloseCircleOutlined
+                <CloseCircleOutlined 
                   className="cursor-pointer hover:text-red-600 ml-4"
                   onClick={() => {
                     setAlertVisible(false);
                     setError('');
+                  }}
+                />
+              </div>
+            }
+          />
+        )}
+
+        {success && alertVisible && (
+          <Alert
+            type="success"
+            showIcon
+            className="mb-6"
+            description={
+              <div className="flex items-center justify-between">
+                <span>Password reset email sent! Please check your email.</span>
+                <CloseCircleOutlined 
+                  className="cursor-pointer hover:text-green-600 ml-4"
+                  onClick={() => {
+                    setAlertVisible(false);
+                    setSuccess(false);
                   }}
                 />
               </div>
@@ -66,7 +83,7 @@ const LoginPage: React.FC = () => {
           size="large"
         >
           <Form.Item
-            name="email" 
+            name="email"
             label={<span className="text-base font-medium">Email</span>}
             rules={[
               { required: true, message: 'Please enter your email' },
@@ -80,17 +97,6 @@ const LoginPage: React.FC = () => {
             />
           </Form.Item>
 
-          <Form.Item
-            name="password" 
-            label={<span className="text-base font-medium">Password</span>}
-            rules={[{ required: true, message: 'Please enter your password' }]}
-          >
-            <Input.Password
-              placeholder="Enter your password"
-              className="py-3"
-            />
-          </Form.Item>
-
           <Form.Item>
             <Button
               type="primary"
@@ -100,22 +106,15 @@ const LoginPage: React.FC = () => {
               size="large"
               className="h-12 text-lg font-semibold"
             >
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? 'Sending...' : 'Request Password'}
             </Button>
           </Form.Item>
         </Form>
 
         <p className="text-center mt-8 text-gray-600 text-base">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-blue-600 hover:text-blue-800 font-semibold">
-            Register here
-          </Link>
-        </p>
-
-        <p className="text-center mt-4 text-gray-600 text-base">
-          Forget Password?{' '}
-          <Link to="/forget" className="text-blue-600 hover:text-blue-800 font-semibold">
-            Forget password
+          Remember your password?{' '}
+          <Link to="/login" className="text-blue-600 hover:text-blue-800 font-semibold">
+            Login here
           </Link>
         </p>
       </div>
@@ -123,4 +122,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default ForgetPass;

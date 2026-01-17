@@ -223,7 +223,7 @@ func (s Service) GetMyBookings(user models.User) ([]models.Booking, error) {
 	if err := s.Db.
 		Preload("Show.Artist").
 		Preload("User").
-		Where("user_id = ? AND status = ?", user.ID, "confirmed").
+		Where("user_id = ?", user.ID).
 		Order("created_at DESC").
 		Find(&bookings).Error; err != nil {
 		return bookings, err
