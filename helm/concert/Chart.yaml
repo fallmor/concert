@@ -1,0 +1,7 @@
+apiVersion: v2
+name: concert
+description: A Helm chart for Concert Booking Application
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+

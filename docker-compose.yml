@@ -19,7 +19,7 @@ services:
     image: temporalio/auto-setup:1.38.0
     ports:
       - "7233:7233"
-      - "8088:8088"  # Temporal UI
+      - "8088:8088"  # temporal UI
     environment:
       DB: postgresql
       DB_PORT: 5432
@@ -34,20 +34,18 @@ services:
       - ./temporal_data:/var/lib/temporal
 
   server:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: concert-server:latest
     ports:
       - "8080:8080"
     environment:
-      # Note: Go code expects DB_Name, DB_Host, etc. (with underscores and capitalization)
       DB_Name: concert_db
       DB_Host: postgres
       DB_PORT: 5432
       DB_User: postgres
       DB_Password: postgres
       DB_SSLMode: disable
-      RESEND_API: ${RESEND_API:-}  # Add
+      TEMPORAL_HOST: temporal:7233
+      RESEND_API: ${RESEND_API:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -56,10 +54,9 @@ services:
     restart: unless-stopped
 
   worker:
-    build:
-      context: .
-      dockerfile: Dockerfile.worker
+    image: concert-worker:latest
     environment:
+      TEMPORAL_HOST: temporal:7233
       RESEND_API: ${RESEND_API:-}
     depends_on:
       - temporal

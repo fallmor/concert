@@ -216,17 +216,17 @@ type UserLimit struct {
 
 var (
 	rateLimitMap = make(map[string]*UserLimit)
-	rateLimitMu  sync.Mutex
+	rateLimitMu  sync.RWMutex
 )
 
-func RateLimit(next http.Handler) http.Handler {
-	time.Tick(3 * time.Minute)
-	// cleanup
+func init() {
+	// Cleanup goroutine - removes stale entries every 3 minutes
 	go func() {
-		for {
+		ticker := time.NewTicker(3 * time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
 			rateLimitMu.Lock()
 			for ip, user := range rateLimitMap {
-
 				if time.Since(user.lastSeen) > 3*time.Minute {
 					delete(rateLimitMap, ip)
 				}
@@ -234,23 +234,30 @@ func RateLimit(next http.Handler) http.Handler {
 			rateLimitMu.Unlock()
 		}
 	}()
+}
+
+func getClientIP(r *http.Request) string {
+	ip := r.RemoteAddr
+	host, _, err := net.SplitHostPort(ip)
+	if err != nil {
+		return ip
+	}
+	return host
+}
+
+func RateLimit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ip := r.RemoteAddr
-		host, _, err := net.SplitHostPort(ip)
-		if err != nil {
-			host = ip
-		}
+		ip := getClientIP(r)
 
 		rateLimitMu.Lock()
-
-		if _, ok := rateLimitMap[host]; !ok {
-			rateLimitMap[host] = &UserLimit{
-				limiter: rate.NewLimiter(2, 4), // 2 requests per second, burst of 4
+		if _, ok := rateLimitMap[ip]; !ok {
+			rateLimitMap[ip] = &UserLimit{
+				limiter: rate.NewLimiter(10, 20), // 10 requests per second burst of 20
 			}
 		}
-		rateLimitMap[host].lastSeen = time.Now()
+		rateLimitMap[ip].lastSeen = time.Now()
 
-		if !rateLimitMap[host].limiter.Allow() {
+		if !rateLimitMap[ip].limiter.Allow() {
 			rateLimitMu.Unlock()
 			utils.WriteJson2manyRequest(w)
 			return

@@ -5,7 +5,6 @@ import (
 	"concert/internal/utils"
 	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 
 	"github.com/joho/godotenv"
@@ -21,12 +20,12 @@ func DbSetup() (*gorm.DB, error) {
 		log.Printf("Error loading .env file: %v", err)
 		return nil, err
 	}
-	DbName := os.Getenv("DB_Name")
-	DbHost := os.Getenv("DB_Host")
-	DbUser := os.Getenv("DB_User")
-	DbPass := os.Getenv("DB_Password")
-	DbPort := os.Getenv("DB_PORT")
-	DbSSLMode := os.Getenv("DB_SSLMode")
+	DbName := utils.GetEnvOrDefault("DB_Name", "")
+	DbHost := utils.GetEnvOrDefault("DB_Host", "")
+	DbUser := utils.GetEnvOrDefault("DB_User", "")
+	DbPass := utils.GetEnvOrDefault("DB_Password", "")
+	DbPort := utils.GetEnvOrDefault("DB_PORT", "")
+	DbSSLMode := utils.GetEnvOrDefault("DB_SSLMode", "")
 	if DbSSLMode == "" {
 		if DbHost == "localhost" || DbHost == "127.0.0.1" {
 			DbSSLMode = "disable"
@@ -64,11 +63,11 @@ func Migrate(db *gorm.DB) error {
 		&models.User{},
 		&models.Artist{},
 		&models.Show{},
-		&models.Booking{}, // Renamed from Fan
+		&models.Booking{}, 
 	)
 	if err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)
 	}
-	log.Println("Database migration completed - Artist table includes photo_url and album_url columns")
+	log.Println("Database migration completed")
 	return nil
 }

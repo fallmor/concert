@@ -7,3 +7,5 @@ frontend/dist/
 frontend/.env.local
 frontend/.env
 static/
+server-image
+worker-image

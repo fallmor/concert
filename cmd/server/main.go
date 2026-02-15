@@ -4,6 +4,7 @@ import (
 	"concert/internal/concert"
 	"concert/internal/database"
 	httpTransport "concert/internal/http"
+	"concert/internal/utils"
 	"fmt"
 	"log"
 	"net/http"
@@ -26,13 +27,15 @@ func Run() error {
 	concertService := concert.NewConcert(db)
 	handler, err := httpTransport.NewRouter(concertService, db)
 	if err != nil {
-		log.Printf("Could not initialize the handler: %v", err)
+		return fmt.Errorf("could not initialize the handler: %w", err)
 	}
 	defer handler.Close()
 	handler.ChiSetRoutes()
 
-	log.Println("Server starting on :8080")
-	if err := http.ListenAndServe(":8080", handler.Route); err != nil {
+	port := utils.GetEnvOrDefault("PORT", "8080")
+	addr := ":" + port
+	log.Printf("Server starting on %s", addr)
+	if err := http.ListenAndServe(addr, handler.Route); err != nil {
 		return fmt.Errorf("failed to start server: %w", err)
 	}
 	return nil

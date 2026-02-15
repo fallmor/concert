@@ -1,12 +1,10 @@
 package utils
 
 import (
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
-	"text/template"
 )
 
 func GetProjectRoot(s string) string {
@@ -30,11 +28,6 @@ func GetProjectRoot(s string) string {
 	}
 }
 
-func GetTemplatePath(filename string) string {
-	projectRoot := GetProjectRoot("go.mod")
-	return filepath.Join(projectRoot, "internal", "templates", filename)
-}
-
 func GetStaticDir() string {
 	projectRoot := GetProjectRoot("go.mod")
 	return filepath.Join(projectRoot, "static")
@@ -42,18 +35,6 @@ func GetStaticDir() string {
 
 func ParseID(idStr string) (uint64, error) {
 	return strconv.ParseUint(idStr, 10, 64)
-}
-
-func RenderTemplate(w http.ResponseWriter, templateName string, data interface{}) {
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	tmpl := template.Must(template.ParseFiles(
-		GetTemplatePath("base.html"),
-		GetTemplatePath(templateName),
-	))
-	if err := tmpl.Execute(w, data); err != nil {
-		log.Printf("Error executing %s template: %v", templateName, err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
 }
 
 func WriteJSONSuccess(w http.ResponseWriter) {
@@ -66,4 +47,12 @@ func WriteJson2manyRequest(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusTooManyRequests)
 	w.Write([]byte(`{"error": "Rate limit hit"}`))
+}
+
+
+func GetEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }

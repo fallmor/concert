@@ -24,7 +24,7 @@ function App() {
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
 
-        <main style={{ flex: 1, padding: "40px 20px" }}>
+        <main className="flex-1 p-4">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/concerts" element={<ConcertsPage />} />

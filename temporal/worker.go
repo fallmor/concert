@@ -19,16 +19,22 @@ func main() {
 	err := godotenv.Load(envPath)
 	if err != nil {
 		log.Printf("Error loading .env file: %v", err)
-		return
 	}
+
+	temporalHost := utils.GetEnvOrDefault("TEMPORAL_HOST", "localhost:7233")
 	c, err := client.Dial(client.Options{
-		HostPort: "localhost:7233",
+		HostPort: temporalHost,
 	})
 	if err != nil {
 		log.Fatalf("failed to connect to temporal server: %v", err)
 	}
 	defer c.Close()
-	sendmail := activity.NewEmailActivities(os.Getenv("RESEND_API"))
+
+	resendAPI := os.Getenv("RESEND_API")
+	if resendAPI == "" {
+		log.Fatal("RESEND_API environment variable is required")
+	}
+	sendmail := activity.NewEmailActivities(resendAPI)
 
 	w := worker.New(c, "email-task-queue", worker.Options{})
 	w.RegisterWorkflow(workflow.SendMailWorkflow)

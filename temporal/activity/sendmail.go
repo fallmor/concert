@@ -22,14 +22,15 @@ func NewEmailActivities(token string) *EmailActivities {
 }
 
 func (e *EmailActivities) SendResetPasswordEmail(email, password string) error {
-	tmpl, err := template.ParseFiles(utils.GetTemplatePath("mail.html"))
+	tmpl, err := template.ParseFiles("mail.html")
 	if err != nil {
 		return err
 	}
 
+	appURL := utils.GetEnvOrDefault("APP_URL", "http://localhost:8080")
 	inf := map[string]string{
 		"Password": password,
-		"URL":      "http://127.0.0.1:8080/login",
+		"URL":      appURL + "/login",
 	}
 	var body bytes.Buffer
 	if err := tmpl.Execute(&body, inf); err != nil {

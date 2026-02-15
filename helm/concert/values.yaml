@@ -1,0 +1,89 @@
+replicaCount: 2
+
+image:
+  repository: concert-server
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+worker:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: concert-worker
+    pullPolicy: IfNotPresent
+    tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: concert.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+database:
+  external:
+    enabled: false
+    host: ""
+    port: 5432
+    name: concert_db
+    user: postgres
+    password: ""
+    sslMode: "disable"
+
+  internal:
+    enabled: true
+    postgresql:
+      auth:
+        postgresPassword: "postgres"
+        database: "concert_db"
+      persistence:
+        enabled: true
+        size: 8Gi
+
+temporal:
+  external:
+    enabled: false
+    host: ""
+    port: 7233
+  
+  internal:
+    enabled: false
+
+config:
+  dbName: concert_db
+  dbHost: postgres
+  dbPort: "5432"
+  dbUser: postgres
+  dbSSLMode: disable
+  port: "8080"
+  appURL: "http://localhost:8080"  
+  temporalHost: "localhost:7233"  
+
+secrets:
+  dbPassword: ""  
+  resendApiKey: ""  
+
+resources:
+  server:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  worker:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi

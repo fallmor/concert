@@ -13,8 +13,8 @@ import (
 
 type CreateShowRequest struct {
 	Title       string  `json:"title"`
-	Date        string  `json:"date"` // "2026-02-15"
-	Time        string  `json:"time"` // "20:00"
+	Date        string  `json:"date"` 
+	Time        string  `json:"time"` 
 	ArtistID    uint    `json:"artistId"`
 	Venue       string  `json:"venue"`
 	Price       float64 `json:"price"`

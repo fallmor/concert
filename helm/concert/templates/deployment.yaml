@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "concert.fullname" . }}-server
+  labels:
+    {{- include "concert.labels" . | nindent 4 }}
+    component: server
+spec:
+  replicas: {{ .Values.server.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "concert.selectorLabels" . | nindent 6 }}
+      component: server
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "concert.selectorLabels" . | nindent 8 }}
+        component: server
+    spec:
+
+      containers:
+      - name: server
+        image: "{{ .Values.server.image.repository }}:{{ .Values.server.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.server.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.server.service.port }}
+          protocol: TCP
+        env:
+        - name: DB_Name
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "concert.fullname" . }}-config
+              key: DB_Name
+        - name: DB_Host
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "concert.fullname" . }}-config
+              key: DB_Host
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "concert.fullname" . }}-config
+              key: DB_PORT
+        - name: DB_User
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "concert.fullname" . }}-config
+              key: DB_User
+        - name: DB_Password
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "concert.fullname" . }}-secret
+              key: DB_Password
+        - name: DB_SSLMode
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "concert.fullname" . }}-config
+              key: DB_SSLMode
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "concert.fullname" . }}-config
+              key: PORT
+        - name: APP_URL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "concert.fullname" . }}-config
+              key: APP_URL
+        - name: TEMPORAL_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "concert.fullname" . }}-config
+              key: TEMPORAL_HOST
+        {{- if .Values.secrets.resendApiKey }}
+        - name: RESEND_API
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "concert.fullname" . }}-secret
+              key: RESEND_API
+        {{- end }}
+        resources:
+          {{- toYaml .Values.server.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+
+
+---
+{{- if .Values.worker.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "concert.fullname" . }}-worker
+  labels:
+    {{- include "concert.labels" . | nindent 4 }}
+    component: worker
+spec:
+  replicas: {{ .Values.worker.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "concert.selectorLabels" . | nindent 6 }}
+      component: worker
+  template:
+    metadata:
+      labels:
+        {{- include "concert.selectorLabels" . | nindent 8 }}
+        component: worker
+    spec:
+      containers:
+      - name: worker
+        image: "{{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
+        env:
+        - name: TEMPORAL_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "concert.fullname" . }}-config
+              key: TEMPORAL_HOST
+        - name: APP_URL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "concert.fullname" . }}-config
+              key: APP_URL
+        {{- if .Values.secrets.resendApiKey }}
+        - name: RESEND_API
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "concert.fullname" . }}-secret
+              key: RESEND_API
+        {{- end }}
+        resources:
+          {{- toYaml .Values.worker.resources | nindent 10 }}
+{{- end }}

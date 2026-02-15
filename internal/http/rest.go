@@ -8,14 +8,14 @@ import (
 	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/rs/cors"
 	"go.temporal.io/sdk/client"
 	"gorm.io/gorm"
 )
 
 func NewRouter(service concert.ConcertService, db *gorm.DB) (*Handler, error) {
+	temporalHost := utils.GetEnvOrDefault("TEMPORAL_HOST", "localhost:7233")
 	tmpClient, err := client.Dial(
-		client.Options{HostPort: "127.0.0.1:7233"})
+		client.Options{HostPort: temporalHost})
 	if err != nil {
 		return nil, err
 	}
@@ -35,16 +35,9 @@ func (h *Handler) Close() {
 func (h *Handler) ChiSetRoutes() {
 	h.Route = chi.NewRouter()
 
-	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "http://localhost:8080"}, // Vite dev + Go production
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Content-Type", "Authorization"},
-		AllowCredentials: true,
-	})
-	h.Route.Use(c.Handler)
-
 	h.Route.Group(func(r chi.Router) {
 		r.Use(RateLimit)
+		r.Get("/api/health", h.HealthCheck)
 		r.Post("/api/public/register", h.RegisterAPI)
 		r.Post("/api/public/login", h.LoginAPI)
 
